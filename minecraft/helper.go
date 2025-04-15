@@ -414,3 +414,29 @@ func getLibraryPath(name string, path string) string {
 	libPath = filepath.Join(libPath, libName, version, filename)
 	return libPath
 }
+
+func copyFile(src, dst string) error {
+	inFile, err := os.Open(src)
+	if err != nil {
+		return fmt.Errorf("error opening source file: %v", err)
+	}
+	defer inFile.Close()
+
+	outFile, err := os.Create(dst)
+	if err != nil {
+		return fmt.Errorf("error creating destination file: %v", err)
+	}
+	defer outFile.Close()
+
+	_, err = io.Copy(outFile, inFile)
+	if err != nil {
+		return fmt.Errorf("error copying file: %v", err)
+	}
+
+	err = outFile.Sync()
+	if err != nil {
+		return fmt.Errorf("error syncing file: %v", err)
+	}
+
+	return nil
+}

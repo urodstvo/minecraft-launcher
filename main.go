@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 
 	"github.com/urodstvo/minecraft-launcher/minecraft"
 )
@@ -23,8 +25,21 @@ func main(){
 	// l.Run()
 	m := minecraft.NewAPI(minecraft.Opts{
 		MinecraftDirectory: "Z:\\Games\\Minecraft",
-		})
+	})
 	// m.InstallMinecraftVersion("1.21.5")
-	cmd, _ := m.GetMinecraftCommand("1.21.5", m.GenerateTestOptions())
-	fmt.Println(cmd)
+	command, _ := m.GetMinecraftCommand("1.21.5", m.GenerateTestOptions())
+	// fmt.Println(cmd)
+	javaPath := command[0]
+	javaArgs := command[1:]
+	cmd := exec.Command(javaPath, javaArgs...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	fmt.Println("Запуск Minecraft...")
+
+	// Запускаем
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println("Ошибка при запуске:", err)
+	}
 }

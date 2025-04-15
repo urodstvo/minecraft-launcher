@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 )
 
@@ -18,66 +17,75 @@ func (m *minecraftConfig) downloadLibrary(id string, lib ClientJsonLibrary) erro
 	}
 
 	currentPath := filepath.Join(m.Config.Directory, "libraries")
+	libPath := currentPath
 	downloadURL := "https://libraries.minecraft.net"
 
-	if lib.Url != nil {
-		downloadURL = *lib.Url
+	if lib.Downloads.Artifact != nil {
+		downloadURL = lib.Downloads.Artifact.Url
+		libPath = filepath.Join(currentPath, lib.Downloads.Artifact.Path)
 	}
 
-	parts := strings.Split(lib.Name, ":")
-	// if len(parts) != 3 {
-	// 	return fmt.Errorf("invalid library name format: %s", lib.Name)
+	// if lib.Url != nil {
+	// 	downloadURL = *lib.Url
 	// }
 
-	libPath := parts[0]
-	name := parts[1]
-	version := parts[2]
+	// parts := strings.Split(lib.Name, ":")
+	// libPath := parts[0]
+	// name := parts[1]
+	// version := parts[2]
 
-	for _, part := range strings.Split(libPath, ".") {
-		currentPath = filepath.Join(currentPath, part)
-		downloadURL = fmt.Sprintf("%s/%s", downloadURL, part)
-	}
+	// for _, part := range strings.Split(libPath, ".") {
+	// 	currentPath = filepath.Join(currentPath, part)
+	// 	downloadURL = fmt.Sprintf("%s/%s", downloadURL, part)
+	// }
 
-	fileEnd := "jar"
-	versionParts := strings.Split(version, "@")
-	if len(versionParts) == 2 {
-		version = versionParts[0]
-		fileEnd = versionParts[1]
-	}
+	// fileEnd := "jar"
+	// versionParts := strings.Split(version, "@")
+	// if len(versionParts) == 2 {
+	// 	version = versionParts[0]
+	// 	fileEnd = versionParts[1]
+	// }
 
-	jarFileName := fmt.Sprintf("%s-%s.%s", name, version, fileEnd)
-	downloadURL = fmt.Sprintf("%s/%s/%s", downloadURL, name, version)
-	currentPath = filepath.Join(currentPath, name, version)
+	// jarFileName := fmt.Sprintf("%s-%s.%s", name, version, fileEnd)
+	// downloadURL = fmt.Sprintf("%s/%s/%s", downloadURL, name, version)
+	// currentPath = filepath.Join(currentPath, name, version)
 
 	native := getNatives(lib)
 
-	if native != "" {
-		jarFileName = fmt.Sprintf("%s-%s-%s.jar", name, version, native)
+	nativeDownloadURL := ""
+	nativeLibPath := currentPath
+	if native != "" && lib.Downloads.Classifiers != nil {
+		nativeDownloadURL = lib.Downloads.Classifiers[native].Url
+		nativeLibPath = filepath.Join(currentPath, lib.Downloads.Classifiers[native].Path)
 	}
 
-	err := downloadFile(downloadURL+"/"+jarFileName, filepath.Join(currentPath, jarFileName), m.Config.Directory, "", false, false)
+	err := downloadFile(downloadURL, libPath, m.Config.Directory, "", false, false)
 	if err != nil {
 		return fmt.Errorf("error downloading library %s: %w", lib.Name, err)
 	}
 
-	if lib.Extract != nil && len(lib.Extract.Exclude) > 0 {
-		extractNativesFile(filepath.Join(currentPath, jarFileName), filepath.Join(m.Config.Directory, "versions", id, "natives"), lib.Extract.Exclude)
+	if native != "" {
+		err := downloadFile(nativeDownloadURL, nativeLibPath, m.Config.Directory, "", false, false)
+		if err != nil {
+			return fmt.Errorf("error downloading library %s: %w", lib.Name, err)
+		}
+		extractNativesFile(libPath, filepath.Join(m.Config.Directory, "versions", id, "natives"), lib.Extract.Exclude)
 	}
 
-	if len(lib.Downloads.Artifact.Url) > 0 && len(lib.Downloads.Artifact.Path) > 0 {
-		err = downloadFile(lib.Downloads.Artifact.Url, filepath.Join(m.Config.Directory, "libraries", lib.Downloads.Artifact.Path), m.Config.Directory, "", false, false)
-		if err != nil {
-			return fmt.Errorf("error downloading artifact for library %s: %w", lib.Name, err)
-		}
-	}
+	// if len(lib.Downloads.Artifact.Url) > 0 && len(lib.Downloads.Artifact.Path) > 0 {
+	// 	err = downloadFile(lib.Downloads.Artifact.Url, filepath.Join(m.Config.Directory, "libraries", lib.Downloads.Artifact.Path), m.Config.Directory, "", false, false)
+	// 	if err != nil {
+	// 		return fmt.Errorf("error downloading artifact for library %s: %w", lib.Name, err)
+	// 	}
+	// }
 
-	if native != "" && len(lib.Downloads.Classifiers[native].Url) > 0 {
-		err = downloadFile(lib.Downloads.Classifiers[native].Url, filepath.Join(currentPath, jarFileName), "", "", false, false)
-		if err != nil {
-			return fmt.Errorf("error downloading native classifier for library %s: %w", lib.Name, err)
-		}
-		extractNativesFile(filepath.Join(currentPath, jarFileName), filepath.Join(m.Config.Directory, "versions", id, "natives"), lib.Extract.Exclude)
-	}
+	// if native != "" && len(lib.Downloads.Classifiers[native].Url) > 0 {
+	// 	err = downloadFile(lib.Downloads.Classifiers[native].Url, filepath.Join(currentPath, jarFileName), "", "", false, false)
+	// 	if err != nil {
+	// 		return fmt.Errorf("error downloading native classifier for library %s: %w", lib.Name, err)
+	// 	}
+	// 	extractNativesFile(filepath.Join(currentPath, jarFileName), filepath.Join(m.Config.Directory, "versions", id, "natives"), lib.Extract.Exclude)
+	// }
 
 	return nil
 }
@@ -110,7 +118,7 @@ func (m *minecraftConfig) downloadAsset(filehash string) error {
 	assetPath := filepath.Join(m.Config.Directory, "assets", "objects", filehash[:2], filehash)
 	err := downloadFile(url, assetPath, "", filehash, false, false)
 	if err != nil {
-		return fmt.Errorf("error downloading asset %s: %v\n", filehash, err)
+		return fmt.Errorf("error downloading asset %s: %v", filehash, err)
 	}
 
 	return nil
@@ -122,9 +130,8 @@ func (m *minecraftConfig) installAssets(data ClientJson) error {
 		return nil
 	}
 
-
 	assetIndexPath := filepath.Join(m.Config.Directory, "assets", "indexes", data.Assets+".json")
-	err := downloadFile(data.AssetIndex.Url, assetIndexPath, "", data.AssetIndex.Sha1, false, false)
+	err := downloadFile(data.AssetIndex.Url, assetIndexPath, m.Config.Directory, data.AssetIndex.Sha1, false, false)
 	if err != nil {
 		return err
 	}
@@ -202,10 +209,11 @@ func (m *minecraftConfig) doVersionInstall(versionID string, url, sha1 string) e
 	}
 	
 
-	// if versionData.InheritsFrom != "" {
-	// 	if err := m.InstallMinecraftVersion(versionData.InheritsFrom); err != nil {}
-	// 	versionData = inheritJSON(versionData, m.Config.Directory)
-	// }
+	if versionData.InheritsFrom != "" {
+		if err := m.InstallMinecraftVersion(versionData.InheritsFrom); err != nil {}
+		versionData, err = inheritJson(versionData, m.Config.Directory)
+		if err != nil {}
+	}
 
 
 	if err := m.installLibraries(versionData.Id, versionData.Libraries); err != nil {
@@ -230,17 +238,16 @@ func (m *minecraftConfig) doVersionInstall(versionID string, url, sha1 string) e
 		}
 	}
 
-	// jarPath := filepath.Join(versionDir, versionData.Id+".jar")
-	// if _, err := os.Stat(jarPath); os.IsNotExist(err) && versionData.InheritsFrom != "" {
-	// 	inheritJarPath := filepath.Join(m.Config.Directory, "versions", versionData.InheritsFrom, versionData.InheritsFrom+".jar")
-	// 	if err := checkPathInsideMinecraftDirectory(m.Config.Directory, inheritJarPath); err != nil {
-	// 		return err
-	// 	}
-	// 	if err := copyFile(inheritJarPath, jarPath); err != nil {
-	// 		return fmt.Errorf("Error copy from parent jar: %w", err)
-	// 	}
-	// }
-
+	jarPath := filepath.Join(versionDir, versionData.Id+".jar")
+	if _, err := os.Stat(jarPath); os.IsNotExist(err) && versionData.InheritsFrom != "" {
+		inheritJarPath := filepath.Join(m.Config.Directory, "versions", versionData.InheritsFrom, versionData.InheritsFrom+".jar")
+		if err := checkPathInsideMinecraftDirectory(m.Config.Directory, inheritJarPath); err != nil {
+			return err
+		}
+		if err := copyFile(inheritJarPath, jarPath); err != nil {
+			return fmt.Errorf("error copy from parent jar: %w", err)
+		}
+	}
 	
 	if versionData.JavaVersion.Component != "" {
 		if err := m.installJVMRuntime(versionData.JavaVersion.Component); err != nil {

@@ -56,8 +56,8 @@ type clientJsonLibraryDownloadsArtifact struct{
 }
 
 type clientJsonLibraryDownloads struct{
-	Artifact clientJsonLibraryDownloadsArtifact `json:"artifact"`
-	Classifiers map[string]clientJsonLibraryDownloadsArtifact
+	Artifact *clientJsonLibraryDownloadsArtifact `json:"artifact"`
+	Classifiers map[string]clientJsonLibraryDownloadsArtifact `json:"classifiers"`
 }
 
 type ClientJsonLibrary struct{
