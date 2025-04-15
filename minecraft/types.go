@@ -1,6 +1,7 @@
 package minecraft
 
 import (
+	"net/http"
 	"time"
 )
 
@@ -8,17 +9,17 @@ import (
 type ClientJsonRule struct{
 	Action 	string `json:"action"`
 	Os 		struct {
-		Name string `json:"name"`
-		Arch string `json:"arch"`
-		Version string `json:"version"`	
+		Name *string `json:"name"`
+		Arch *string `json:"arch"`
+		Version *string `json:"version"`	
 	} `json:"os"`
 	Features *struct {
-		HasCustomResolution 	bool `json:"has_Custom_Resolution"`
-		IsDemoUser 				bool `json:"is_demo_user"`
-		HasQuickPlaysSupport 	bool `json:"has_quick_plays_support"`
-		IsQuickPlaySingleplayer bool `json:"is_quick_play_singleplayer"`
-		IsQuickPlayMultiplayer 	bool `json:"is_quick_play_multiplayer"`
-		IsQuickPlayRealms 		bool `json:"is_quick_play_realms"`
+		HasCustomResolution 	*bool `json:"has_Custom_Resolution"`
+		IsDemoUser 				*bool `json:"is_demo_user"`
+		HasQuickPlaysSupport 	*bool `json:"has_quick_plays_support"`
+		IsQuickPlaySingleplayer *bool `json:"is_quick_play_singleplayer"`
+		IsQuickPlayMultiplayer 	*bool `json:"is_quick_play_multiplayer"`
+		IsQuickPlayRealms 		*bool `json:"is_quick_play_realms"`
 	} `json:"features"`
 }
 
@@ -28,7 +29,7 @@ type ClientJsonArgumentRule struct{
 	Value 				any 				`json:"value"`
 }
 
-type _ClientJsonAssetIndex struct{
+type clientJsonAssetIndex struct{
 	Id 			string 	`json:"id"`
 	Sha1 		string 	`json:"sha1"`
 	Size 		int 	`json:"size"`
@@ -36,54 +37,54 @@ type _ClientJsonAssetIndex struct{
 	Url 		string 	`json:"url"`
 }
 
-type _ClientJsonDownloads struct{
+type clientJsonDownloads struct{
 	Sha1 	string 	`json:"sha1"`
 	Size 	int 	`json:"size"`
 	Url 	string 	`json:"url"`
 }
 
-type _ClientJsonJavaVersion struct{
+type clientJsonJavaVersion struct{
 	Component		string 	`json:"component"`
 	MajorVersion 	int 	`json:"majorVersion"`
 }
 
-type _ClientJsonLibraryDownloadsArtifact struct{
+type clientJsonLibraryDownloadsArtifact struct{
 	Path 	string 	`json:"path"`
 	Url 	string 	`json:"url"`
 	Sha1 	string	`json:"sha1"`
 	Size 	int 	`json:"size"`
 }
 
-type _ClientJsonLibraryDownloads struct{
-	Artifact _ClientJsonLibraryDownloadsArtifact `json:"artifact"`
-	Classifiers map[string]_ClientJsonLibraryDownloadsArtifact
+type clientJsonLibraryDownloads struct{
+	Artifact clientJsonLibraryDownloadsArtifact `json:"artifact"`
+	Classifiers map[string]clientJsonLibraryDownloadsArtifact
 }
 
 type ClientJsonLibrary struct{
 	Name 		string `json:"name"`
-	Downloads 	_ClientJsonLibraryDownloads `json:"downloads"`
-	Extract struct {
-		Exclude []string `json:"-"`
-	} `json:"-"`
+	Downloads 	clientJsonLibraryDownloads `json:"downloads"`
+	Extract *struct {
+		Exclude []string `json:"extract"`
+	} `json:"exclude"`
 	Rules 	[]ClientJsonRule `json:"rules"`
-	Natives struct{
-		Linux 	string `json:"linux"`
-		Osx 	string `json:"osx"`
-		Windows string `json:"windows"`
+	Natives *struct{
+		Linux 	*string `json:"linux"`
+		Osx 	*string `json:"osx"`
+		Windows *string `json:"windows"`
 	} `json:"natives"`
-	Url string `json:"url"`
+	Url *string `json:"url"`
 }
 
-type _ClientJsonLoggingFile struct{
+type clientJsonLoggingFile struct{
 	Id 		string 	`json:"id"`
 	Sha1 	string 	`json:"sha1"`
 	Size 	int 	`json:"size"`
 	Url 	string 	`json:"url"`
 }
 
-type _ClientJsonLogging struct{
+type clientJsonLogging struct{
 	Argument 	string 					`json:"argument"`
-	File 		_ClientJsonLoggingFile 	`json:"file"`
+	File 		clientJsonLoggingFile 	`json:"file"`
 	Type 		string 					`json:"type"`
 }
 
@@ -95,18 +96,18 @@ type ClientJson struct{
 		Jvm []any `json:"jvm"`
 	} `json:"arguments"`
 	MinecraftArguments string `json:"-"`
-	AssetIndex 		*_ClientJsonAssetIndex `json:"assetIndex"`
+	AssetIndex 		*clientJsonAssetIndex `json:"assetIndex"`
 	Assets 			string `json:"assets"`
 	Downloads struct {
-		Client 			_ClientJsonDownloads `json:"client"`
-		ClientMappings 	_ClientJsonDownloads `json:"client_mappings"`
-		Server 			_ClientJsonDownloads `json:"server"`
-		ServerMappings 	_ClientJsonDownloads `json:"server_mappings"`
+		Client 			clientJsonDownloads `json:"client"`
+		ClientMappings 	clientJsonDownloads `json:"client_mappings"`
+		Server 			clientJsonDownloads `json:"server"`
+		ServerMappings 	clientJsonDownloads `json:"server_mappings"`
 	} `json:"downloads"`
-	JavaVersion 	_ClientJsonJavaVersion `json:"javaVersion"`
+	JavaVersion 	clientJsonJavaVersion `json:"javaVersion"`
 	Libraries 		[]ClientJsonLibrary `json:"libraries"`
-	Logging struct {
-		Client _ClientJsonLogging `json:"client"`
+	Logging *struct {
+		Client clientJsonLogging `json:"client"`
 	} `json:"logging"`
 	MainClass 				string 	`json:"mainClass"`
 	MinimumLauncherVersion 	int 	`json:"minimumLauncherVersion"`
@@ -117,7 +118,7 @@ type ClientJson struct{
 	InheritsFrom 			string 	`json:"-"`
 }
 
-type _VersionListManifestJsonVersion struct {
+type versionListManifestJsonVersion struct {
 	Id 				string `json:"id"`
 	Type 			string `json:"type"`
 	Url 			string `json:"url"`
@@ -132,16 +133,16 @@ type VersionListManifestJson struct{
 		Release 	string `json:"release"`
 		Snapshot 	string `json:"snapshot"`
 	} `json:"latest"`
-	Versions []_VersionListManifestJsonVersion `json:"versions"`
+	Versions []versionListManifestJsonVersion `json:"versions"`
 }
 
-type _AssetsJsonObject struct{
+type assetsJsonObject struct{
 	Hash string `json:"hash"`
 	Size int `json:"size"`
 }
 
 type AssetsJson struct {
-	Objects map[string]_AssetsJsonObject `json:"objects"`
+	Objects map[string]assetsJsonObject `json:"objects"`
 }
 
 type JavaInformation struct {
@@ -164,19 +165,19 @@ type VersionRuntimeInformation struct {
 	JavaMajorVersion int 
 }
 
-type _RuntimeListJsonEntryManifest struct {
+type runtimeListJsonEntryManifest struct {
 	SHA1 string `json:"sha1"`
     Size int `json:"size"`
     Url string `json:"url"`
 }
 
 
-type _RuntimeListJsonEntry struct {
+type runtimeListJsonEntry struct {
 	Availability struct {
 		Group 		int	`json:"group"`
 		Progress 	int	 `json:"progress"`
 	} `json:"availability"`
-    Manifest _RuntimeListJsonEntryManifest  `json:"manifest"`
+    Manifest runtimeListJsonEntryManifest  `json:"manifest"`
     Version struct {
 		Name 		string  `json:"name"`
 		Released 	string  `json:"released"`
@@ -184,18 +185,18 @@ type _RuntimeListJsonEntry struct {
 }
 
 
-type RuntimeListJson map[string]map[string][]_RuntimeListJsonEntry
+type RuntimeListJson map[string]map[string][]runtimeListJsonEntry
 
 
-type _PlatformManifestJsonFileDownloads struct {
+type platformManifestJsonFileDownloads struct {
 	SHA1 string `json:"sha1"`
     Size int `json:"size"`
     Url string `json:"url"`
 }
 
 
-type _PlatformManifestJsonFile struct{
-	Downloads map[string] _PlatformManifestJsonFileDownloads `json:"downloads"`
+type platformManifestJsonFile struct{
+	Downloads map[string] platformManifestJsonFileDownloads `json:"downloads"`
     Type string `json:"type"`
     Executable bool `json:"executable"`
     Target string `json:"target"`
@@ -203,5 +204,22 @@ type _PlatformManifestJsonFile struct{
 
 
 type PlatformManifestJson struct{
-	Files map[string]_PlatformManifestJsonFile
+	Files map[string]platformManifestJsonFile
+}
+
+type LatestMinecraftVersions struct {
+	Release string
+	Snapshot string
+}
+
+type MinecraftVersionInfo struct {
+	Id string
+    Type string
+    ReleaseTime time.Time
+    ComplianceLevel int
+}
+
+type requestsResponseCache struct {
+	Response *http.Response
+	Datetime time.Time
 }

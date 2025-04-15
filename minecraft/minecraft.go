@@ -28,11 +28,41 @@ type MinecraftOptions struct {
 	QuickPlayRealms       *string  `json:"quickPlayRealms,omitempty"`
 }
 
-type Minecraft struct {
+type minecraftConfig struct {
 	Config struct {
 		Directory string
 	}
 }
 
-type IMinecraft interface {
+type API interface {
+	InstallMinecraftVersion(versionId string) error
+
+	GetMinecraftCommand(version string, options MinecraftOptions) ([]string, error)
+
+	GetMinecraftDirectory() string
+	GetLatestVersion() (LatestMinecraftVersions, error)
+	GetVersionList() ([]MinecraftVersionInfo, error)
+	GetInstalledVersions(minecraftDirectory string) ([]MinecraftVersionInfo, error)
+	GetAvailableVersions(minecraftDirectory string) ([]MinecraftVersionInfo, error)
+	GenerateTestOptions() MinecraftOptions
+	IsPlatformSupported() bool
+	IsMinecraftInstalled(minecraftDirectory string) bool
+
+	FindSystemJavaVersions(additionalDirectories []string) ([]string, error)
+	GetJavaInformation(path string) (JavaInformation, error)
+	GetSystemJavaVersionInformation(additionalDirectories []string) ([]JavaInformation, error)
+
+	GetLibraryVersion() string
+}
+
+type Opts struct {
+	MinecraftDirectory string
+}
+
+func NewAPI(opts Opts) API {
+	return &minecraftConfig{
+		Config: struct{ Directory string }{
+			Directory: opts.MinecraftDirectory,
+		},
+	}
 }

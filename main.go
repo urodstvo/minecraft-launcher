@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/urodstvo/minecraft-launcher/minecraft"
 )
 
@@ -19,10 +21,10 @@ func main(){
 	// 	System: &launcher.System{},
 	// }
 	// l.Run()
-	m := minecraft.Minecraft{
-		Config: struct{Directory string}{
-			Directory: "Z:\\Games\\Minecraft",
-		},
-	}
-	m.InstallVersion("1.21.5")
+	m := minecraft.NewAPI(minecraft.Opts{
+		MinecraftDirectory: "Z:\\Games\\Minecraft",
+		})
+	// m.InstallMinecraftVersion("1.21.5")
+	cmd, _ := m.GetMinecraftCommand("1.21.5", m.GenerateTestOptions())
+	fmt.Println(cmd)
 }

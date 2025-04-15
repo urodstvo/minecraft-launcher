@@ -16,18 +16,20 @@ func getNatives(lib ClientJsonLibrary) string {
 		archType = "32"
 	}
 
-	switch runtime.GOOS {
-	case "windows":
-		if lib.Natives.Windows != "" {
-			return strings.ReplaceAll(lib.Natives.Windows, "${arch}", archType)
+	if lib.Natives != nil {
+		switch runtime.GOOS {
+		case "windows":
+			if lib.Natives.Windows != nil {
+				return strings.ReplaceAll(*lib.Natives.Windows, "${arch}", archType)
+			}
+		case "darwin":
+		if lib.Natives.Osx != nil {
+			return strings.ReplaceAll(*lib.Natives.Osx, "${arch}", archType)
 		}
-	case "darwin":
-		if lib.Natives.Osx != "" {
-			return strings.ReplaceAll(lib.Natives.Osx, "${arch}", archType)
-		}
-	case "linux":
-		if lib.Natives.Linux != "" {
-			return strings.ReplaceAll(lib.Natives.Linux, "${arch}", archType)
+		case "linux":
+			if lib.Natives.Linux != nil {
+				return strings.ReplaceAll(*lib.Natives.Linux, "${arch}", archType)
+			}
 		}
 	}
 

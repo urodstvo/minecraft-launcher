@@ -176,7 +176,7 @@ func getVersionRuntimeInformation(versionID string, mcDir string) (*VersionRunti
 	}, nil
 }
 
-func installRuntimeFile(key string, value _PlatformManifestJsonFile, basePath string, minecraftDirectory string, fileList *[]string, mutex *sync.Mutex) error {
+func installRuntimeFile(key string, value platformManifestJsonFile, basePath string, minecraftDirectory string, fileList *[]string, mutex *sync.Mutex) error {
 	currentPath := filepath.Join(basePath, key)
 
 	if err := checkPathInsideMinecraftDirectory(minecraftDirectory, currentPath); err != nil {
@@ -235,7 +235,7 @@ func installRuntimeFile(key string, value _PlatformManifestJsonFile, basePath st
 	return nil
 }
 
-func (m *Minecraft) InstallJVMRuntime(jvmVersion string) error {
+func (m *minecraftConfig) installJVMRuntime(jvmVersion string) error {
 	platform := getJVMPlatform()
 	runtimePath := filepath.Join(m.Config.Directory, "runtime", jvmVersion, platform, jvmVersion)
 
@@ -266,7 +266,7 @@ func (m *Minecraft) InstallJVMRuntime(jvmVersion string) error {
 		sem <- struct{}{}
 		wg.Add(1)
 		
-		go func(p string, f _PlatformManifestJsonFile) {
+		go func(p string, f platformManifestJsonFile) {
 			defer wg.Done()
 			defer func() { <-sem }() 
 			err := installRuntimeFile(p, f, basePath, m.Config.Directory, &fileList, &mu)

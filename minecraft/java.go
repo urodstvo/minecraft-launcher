@@ -43,7 +43,7 @@ func findJavaDirectory(path string) ([]string, error) {
 	return javaList, nil
 }
 
-func findSystemJavaVersions(additionalDirectories []string) ([]string, error) {
+func (m *minecraftConfig) FindSystemJavaVersions(additionalDirectories []string) ([]string, error) {
 	var javaList []string
 	var dirsToSearch []string
 
@@ -75,7 +75,7 @@ func findSystemJavaVersions(additionalDirectories []string) ([]string, error) {
 	return javaList, nil
 }
 
-func getJavaInformation(path string) (JavaInformation, error) {
+func (m *minecraftConfig) GetJavaInformation(path string) (JavaInformation, error) {
 	binDir := filepath.Join(path, "bin")
 	javaExecutable := "java"
 	if runtime.GOOS == "windows" {
@@ -125,15 +125,15 @@ func getJavaInformation(path string) (JavaInformation, error) {
 	return info, nil
 }
 
-func getSystemJavaVersionInformation(additionalDirectories []string) ([]JavaInformation, error) {
-	javaPaths, err := findSystemJavaVersions(additionalDirectories)
+func (m *minecraftConfig) GetSystemJavaVersionInformation(additionalDirectories []string) ([]JavaInformation, error) {
+	javaPaths, err := m.FindSystemJavaVersions(additionalDirectories)
 	if err != nil {
 		return nil, err
 	}
 
 	var infos []JavaInformation
 	for _, path := range javaPaths {
-		info, err := getJavaInformation(path)
+		info, err := m.GetJavaInformation(path)
 		if err != nil {
 			log.Printf("warning: failed to get info for %s: %v", path, err)
 			continue

@@ -1,6 +1,7 @@
 package launcher
 
 import (
+	"github.com/urodstvo/minecraft-launcher/minecraft"
 	"github.com/urodstvo/minecraft-launcher/utils"
 )
 
@@ -12,8 +13,8 @@ type Launcher struct {
 	System  *System
 
 	Server 	  *Server
-	Minecraft *Minecraft
 	UI        *UIView
+	Minecraft minecraft.API
 }
 
 func (l *Launcher) checkVersion() {
