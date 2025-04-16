@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-
 type ClientJsonRule struct{
 	Action 	string `json:"action"`
 	Os 		struct {
@@ -14,7 +13,7 @@ type ClientJsonRule struct{
 		Version *string `json:"version"`	
 	} `json:"os"`
 	Features *struct {
-		HasCustomResolution 	*bool `json:"has_Custom_Resolution"`
+		HasCustomResolution 	*bool `json:"has_custom_resolution"`
 		IsDemoUser 				*bool `json:"is_demo_user"`
 		HasQuickPlaysSupport 	*bool `json:"has_quick_plays_support"`
 		IsQuickPlaySingleplayer *bool `json:"is_quick_play_singleplayer"`
@@ -95,7 +94,7 @@ type ClientJson struct{
 		Game []any `json:"game"`
 		Jvm []any `json:"jvm"`
 	} `json:"arguments"`
-	MinecraftArguments string `json:"-"`
+	MinecraftArguments string `json:"minecraftArguments"`
 	AssetIndex 		*clientJsonAssetIndex `json:"assetIndex"`
 	Assets 			string `json:"assets"`
 	Downloads struct {
@@ -122,10 +121,10 @@ type versionListManifestJsonVersion struct {
 	Id 				string `json:"id"`
 	Type 			string `json:"type"`
 	Url 			string `json:"url"`
-	Time 			time.Time `json:"time"`
-	ReleaseTime 	time.Time `json:"releaseTime"`
+	Time 			string `json:"time"`
+	ReleaseTime 	string `json:"releaseTime"`
 	Sha1 			string `json:"sha1"`
-	ComplianceLevel uint `json:"complianceLevel"`
+	ComplianceLevel int `json:"complianceLevel"`
 }
 
 type VersionListManifestJson struct{
@@ -171,7 +170,6 @@ type runtimeListJsonEntryManifest struct {
     Url string `json:"url"`
 }
 
-
 type runtimeListJsonEntry struct {
 	Availability struct {
 		Group 		int	`json:"group"`
@@ -184,16 +182,13 @@ type runtimeListJsonEntry struct {
 	}  `json:"version"`
 }
 
-
 type RuntimeListJson map[string]map[string][]runtimeListJsonEntry
-
 
 type platformManifestJsonFileDownloads struct {
 	SHA1 string `json:"sha1"`
     Size int `json:"size"`
     Url string `json:"url"`
 }
-
 
 type platformManifestJsonFile struct{
 	Downloads map[string] platformManifestJsonFileDownloads `json:"downloads"`
@@ -202,9 +197,8 @@ type platformManifestJsonFile struct{
     Target string `json:"target"`
 }
 
-
 type PlatformManifestJson struct{
-	Files map[string]platformManifestJsonFile
+	Files map[string]platformManifestJsonFile `json:"files"`
 }
 
 type LatestMinecraftVersions struct {
@@ -215,7 +209,7 @@ type LatestMinecraftVersions struct {
 type MinecraftVersionInfo struct {
 	Id string
     Type string
-    ReleaseTime time.Time
+    ReleaseTime string
     ComplianceLevel int
 }
 

@@ -23,12 +23,20 @@ func main(){
 	// 	System: &launcher.System{},
 	// }
 	// l.Run()
-	m := minecraft.NewAPI(minecraft.Opts{
-		MinecraftDirectory: "Z:\\Games\\Minecraft",
-	})
-	// m.InstallMinecraftVersion("1.21.5")
-	command, _ := m.GetMinecraftCommand("1.21.5", m.GenerateTestOptions())
-	// fmt.Println(cmd)
+	m := minecraft.GenerateTestOptions()
+	m.GameDirectory = "Z:\\Games\\Minecraft"
+	// err := minecraft.InstallMinecraftVersion("1.21.5", m)
+	// if err != nil {
+	// 	fmt.Printf("[ERROR] %v", err)
+	// } else {
+	// 	fmt.Println("Minecraft version in installed")
+	// }
+	command, err := minecraft.GetMinecraftCommand("1.21.5", m)
+	if err != nil {
+		fmt.Println(err)
+		return
+	} 
+	fmt.Println(command)	
 	javaPath := command[0]
 	javaArgs := command[1:]
 	cmd := exec.Command(javaPath, javaArgs...)
@@ -38,7 +46,7 @@ func main(){
 	fmt.Println("Запуск Minecraft...")
 
 	// Запускаем
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		fmt.Println("Ошибка при запуске:", err)
 	}

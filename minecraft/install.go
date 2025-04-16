@@ -1,22 +1,18 @@
 package minecraft
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"sync"
 )
 
-// download library for minecraft
-func (m *minecraftConfig) downloadLibrary(id string, lib ClientJsonLibrary) error {
+func downloadLibrary(id string, lib ClientJsonLibrary, mcDir string) error {
 	if len(lib.Rules) > 0 && !parseRuleList(lib.Rules, nil) {
 		return nil
 	}
 
-	currentPath := filepath.Join(m.Config.Directory, "libraries")
+	currentPath := filepath.Join(mcDir, "libraries")
 	libPath := currentPath
 	downloadURL := "https://libraries.minecraft.net"
 
@@ -24,31 +20,6 @@ func (m *minecraftConfig) downloadLibrary(id string, lib ClientJsonLibrary) erro
 		downloadURL = lib.Downloads.Artifact.Url
 		libPath = filepath.Join(currentPath, lib.Downloads.Artifact.Path)
 	}
-
-	// if lib.Url != nil {
-	// 	downloadURL = *lib.Url
-	// }
-
-	// parts := strings.Split(lib.Name, ":")
-	// libPath := parts[0]
-	// name := parts[1]
-	// version := parts[2]
-
-	// for _, part := range strings.Split(libPath, ".") {
-	// 	currentPath = filepath.Join(currentPath, part)
-	// 	downloadURL = fmt.Sprintf("%s/%s", downloadURL, part)
-	// }
-
-	// fileEnd := "jar"
-	// versionParts := strings.Split(version, "@")
-	// if len(versionParts) == 2 {
-	// 	version = versionParts[0]
-	// 	fileEnd = versionParts[1]
-	// }
-
-	// jarFileName := fmt.Sprintf("%s-%s.%s", name, version, fileEnd)
-	// downloadURL = fmt.Sprintf("%s/%s/%s", downloadURL, name, version)
-	// currentPath = filepath.Join(currentPath, name, version)
 
 	native := getNatives(lib)
 
@@ -59,39 +30,23 @@ func (m *minecraftConfig) downloadLibrary(id string, lib ClientJsonLibrary) erro
 		nativeLibPath = filepath.Join(currentPath, lib.Downloads.Classifiers[native].Path)
 	}
 
-	err := downloadFile(downloadURL, libPath, m.Config.Directory, "", false, false)
+	err := downloadFile(downloadURL, libPath, mcDir, "", false, false)
 	if err != nil {
 		return fmt.Errorf("error downloading library %s: %w", lib.Name, err)
 	}
 
 	if native != "" {
-		err := downloadFile(nativeDownloadURL, nativeLibPath, m.Config.Directory, "", false, false)
+		err := downloadFile(nativeDownloadURL, nativeLibPath, mcDir, "", false, false)
 		if err != nil {
 			return fmt.Errorf("error downloading library %s: %w", lib.Name, err)
 		}
-		extractNativesFile(libPath, filepath.Join(m.Config.Directory, "versions", id, "natives"), lib.Extract.Exclude)
+		extractNativesFile(libPath, filepath.Join(mcDir, "versions", id, "natives"), lib.Extract.Exclude)
 	}
-
-	// if len(lib.Downloads.Artifact.Url) > 0 && len(lib.Downloads.Artifact.Path) > 0 {
-	// 	err = downloadFile(lib.Downloads.Artifact.Url, filepath.Join(m.Config.Directory, "libraries", lib.Downloads.Artifact.Path), m.Config.Directory, "", false, false)
-	// 	if err != nil {
-	// 		return fmt.Errorf("error downloading artifact for library %s: %w", lib.Name, err)
-	// 	}
-	// }
-
-	// if native != "" && len(lib.Downloads.Classifiers[native].Url) > 0 {
-	// 	err = downloadFile(lib.Downloads.Classifiers[native].Url, filepath.Join(currentPath, jarFileName), "", "", false, false)
-	// 	if err != nil {
-	// 		return fmt.Errorf("error downloading native classifier for library %s: %w", lib.Name, err)
-	// 	}
-	// 	extractNativesFile(filepath.Join(currentPath, jarFileName), filepath.Join(m.Config.Directory, "versions", id, "natives"), lib.Extract.Exclude)
-	// }
 
 	return nil
 }
 
-// install all necessary libs
-func (m *minecraftConfig) installLibraries(id string, libraries []ClientJsonLibrary) error {
+func installLibraries(id string, libraries []ClientJsonLibrary, mcDir string) error {
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, maxWorkers)
 
@@ -100,9 +55,7 @@ func (m *minecraftConfig) installLibraries(id string, libraries []ClientJsonLibr
 		sem <- struct{}{} 
 		go func(lib ClientJsonLibrary) {
 			defer wg.Done()
-			if err := m.downloadLibrary(id, lib); err != nil {
-				fmt.Printf("Error downloading library %s: %v\n", lib.Name, err)
-			}
+			downloadLibrary(id, lib, mcDir)
 			<-sem
 		}(lib)
 	}
@@ -112,10 +65,9 @@ func (m *minecraftConfig) installLibraries(id string, libraries []ClientJsonLibr
 	return nil
 }
 
-// download asset by its hash
-func (m *minecraftConfig) downloadAsset(filehash string) error {
+func downloadAsset(filehash string, mcDir string) error {
 	url := "https://resources.download.minecraft.net/" + filehash[:2] + "/" + filehash
-	assetPath := filepath.Join(m.Config.Directory, "assets", "objects", filehash[:2], filehash)
+	assetPath := filepath.Join(mcDir, "assets", "objects", filehash[:2], filehash)
 	err := downloadFile(url, assetPath, "", filehash, false, false)
 	if err != nil {
 		return fmt.Errorf("error downloading asset %s: %v", filehash, err)
@@ -124,31 +76,23 @@ func (m *minecraftConfig) downloadAsset(filehash string) error {
 	return nil
 }
 
-// install all assets
-func (m *minecraftConfig) installAssets(data ClientJson) error {
+func installAssets(data ClientJson, mcDir string) error {
 	if data.AssetIndex == nil {
 		return nil
 	}
 
-	assetIndexPath := filepath.Join(m.Config.Directory, "assets", "indexes", data.Assets+".json")
-	err := downloadFile(data.AssetIndex.Url, assetIndexPath, m.Config.Directory, data.AssetIndex.Sha1, false, false)
+	assetIndexPath := filepath.Join(mcDir, "assets", "indexes", data.Assets+".json")
+	err := downloadFile(data.AssetIndex.Url, assetIndexPath, mcDir, data.AssetIndex.Sha1, false, false)
 	if err != nil {
 		return err
 	}
 
-	file, err := os.Open(assetIndexPath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	var assetsData AssetsJson
-	err = json.NewDecoder(file).Decode(&assetsData)
+	assetsData, err := readJSON[AssetsJson](assetIndexPath)
 	if err != nil {
 		return err
 	}
 
-	assets := make([]string, 0, len(assetsData.Objects))
+assets := make([]string, 0, len(assetsData.Objects))
 	for _, obj := range assetsData.Objects {
 		assets = append(assets, obj.Hash)
 	}
@@ -161,15 +105,9 @@ func (m *minecraftConfig) installAssets(data ClientJson) error {
 
 		go func(filehash string) {
 			defer wg.Done()
-
 			c <- 1
 			defer func() { <-c }()
-
-			err := m.downloadAsset(filehash)
-			if err != nil {
-				fmt.Println("Error downloading asset:", err)
-			}
-
+			downloadAsset(filehash, mcDir)
 		}(filehash)
 	}
 
@@ -178,54 +116,40 @@ func (m *minecraftConfig) installAssets(data ClientJson) error {
 	return nil
 }
 
-// install the given version
-func (m *minecraftConfig) doVersionInstall(versionID string, url, sha1 string) error {
-	versionDir := filepath.Join(m.Config.Directory, "versions", versionID)
+func doVersionInstall(versionID string, url, sha1 string, options MinecraftOptions) error {
+	mcDir := options.GameDirectory
+	versionDir := filepath.Join(mcDir, "versions", versionID)
 	versionJsonPath := filepath.Join(versionDir, versionID+".json")
 
 	if url != "" {
 		if err := os.MkdirAll(versionDir, 0755); err != nil {
 			return fmt.Errorf("error while creating version: %w", err)
 		}
-		if err := downloadFile(url, versionJsonPath, m.Config.Directory, sha1, false, false); err != nil {
+		if err := downloadFile(url, versionJsonPath, mcDir, sha1, false, false); err != nil {
 			return fmt.Errorf("download error of version.json: %w", err)
 		}
 	}
 
-	var versionData ClientJson
-	file, err := os.Open(versionJsonPath)
+	versionData, err := readJSON[ClientJson](versionJsonPath)
 	if err != nil {
-		return fmt.Errorf("failed to open file: %w", err)
-	}
-	defer file.Close()
-
-	fileContent, err := io.ReadAll(file)
-	if err != nil {
-		return fmt.Errorf("failed to read file content: %w", err)
+		return err
 	}
 
-	if err := json.Unmarshal(fileContent,  &versionData); err != nil {
-		return fmt.Errorf("failed to unmarshal JSON: %w", err)
-	}
-	
-
-	if versionData.InheritsFrom != "" {
-		if err := m.InstallMinecraftVersion(versionData.InheritsFrom); err != nil {}
-		versionData, err = inheritJson(versionData, m.Config.Directory)
-		if err != nil {}
+if versionData.InheritsFrom != "" {
+		InstallMinecraftVersion(versionData.InheritsFrom, options);
+		versionData, _ = inheritJson(versionData, mcDir)
 	}
 
-
-	if err := m.installLibraries(versionData.Id, versionData.Libraries); err != nil {
+	if err := installLibraries(versionData.Id, versionData.Libraries, mcDir); err != nil {
 		return fmt.Errorf("error while installing libraries: %w", err)
 	}
 
-	if err := m.installAssets(versionData); err != nil {
+	if err := installAssets(versionData, mcDir); err != nil {
 		return fmt.Errorf("error while installing assets: %w", err)
 	}
 
 	if versionData.Logging.Client.File.Url != "" {
-		logFilePath := filepath.Join(m.Config.Directory, "assets", "log_configs", versionData.Logging.Client.File.Id)
+		logFilePath := filepath.Join(mcDir, "assets", "log_configs", versionData.Logging.Client.File.Id)
 		if err := downloadFile(versionData.Logging.Client.File.Url, logFilePath, "", versionData.Logging.Client.File.Sha1, false, false); err != nil {
 			return fmt.Errorf("error download log config: %w", err)
 		}
@@ -240,8 +164,8 @@ func (m *minecraftConfig) doVersionInstall(versionID string, url, sha1 string) e
 
 	jarPath := filepath.Join(versionDir, versionData.Id+".jar")
 	if _, err := os.Stat(jarPath); os.IsNotExist(err) && versionData.InheritsFrom != "" {
-		inheritJarPath := filepath.Join(m.Config.Directory, "versions", versionData.InheritsFrom, versionData.InheritsFrom+".jar")
-		if err := checkPathInsideMinecraftDirectory(m.Config.Directory, inheritJarPath); err != nil {
+		inheritJarPath := filepath.Join(mcDir, "versions", versionData.InheritsFrom, versionData.InheritsFrom+".jar")
+		if err := checkPathInsideMinecraftDirectory(mcDir, inheritJarPath); err != nil {
 			return err
 		}
 		if err := copyFile(inheritJarPath, jarPath); err != nil {
@@ -250,37 +174,23 @@ func (m *minecraftConfig) doVersionInstall(versionID string, url, sha1 string) e
 	}
 	
 	if versionData.JavaVersion.Component != "" {
-		if err := m.installJVMRuntime(versionData.JavaVersion.Component); err != nil {
-			return fmt.Errorf("не удалось установить Java Runtime: %w", err)
+		if err := installJVMRuntime(versionData.JavaVersion.Component, mcDir); err != nil {
+			return fmt.Errorf("error installing Java Runtime: %w", err)
 		}
 	}
-
-	fmt.Println("Version installed:", versionData.Id)
 	return nil
 }
 
+func InstallMinecraftVersion(versionId string, options MinecraftOptions) error {
 
-func (m *minecraftConfig) InstallMinecraftVersion(versionId string) error {
-	// versionJsonPath := filepath.Join(m.Config.Directory, "versions", versionId, versionId+".json")
-	// if _, err := os.Stat(versionJsonPath); err == nil {
-	// 	fmt.Println("Version already installed:", versionId)
-	// 	return nil
-	// }
-
-	resp, err := http.Get("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json")
+versionList, err := fetch[VersionListManifestJson]("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json")
 	if err != nil {
-		return fmt.Errorf("failed to fetch version list: %w", err)
-	}
-	defer resp.Body.Close()
-
-	var versionList VersionListManifestJson
-	if err := json.NewDecoder(resp.Body).Decode(&versionList); err != nil {
 		return fmt.Errorf("failed to decode version list: %w", err)
 	}
 
-	for _, version := range versionList.Versions {
+for _, version := range versionList.Versions {
 		if version.Id == versionId {
-			err := m.doVersionInstall(versionId, version.Url, "")
+			err := doVersionInstall(versionId, version.Url, "", options)
 			if err != nil {
 				return fmt.Errorf("failed to install version %s: %w", versionId, err)
 			}
@@ -288,5 +198,5 @@ func (m *minecraftConfig) InstallMinecraftVersion(versionId string) error {
 		}
 	}
 
-	return fmt.Errorf("version not found")
+	return ErrorVersionNotFound
 }

@@ -43,7 +43,7 @@ func findJavaDirectory(path string) ([]string, error) {
 	return javaList, nil
 }
 
-func (m *minecraftConfig) FindSystemJavaVersions(additionalDirectories []string) ([]string, error) {
+func FindSystemJavaVersions(additionalDirectories []string) ([]string, error) {
 	var javaList []string
 	var dirsToSearch []string
 
@@ -58,7 +58,7 @@ func (m *minecraftConfig) FindSystemJavaVersions(additionalDirectories []string)
 			"/usr/lib/jvm",
 			"/usr/lib/sdk",
 		)
-	// Note: macOS intentionally left out (unsupported like original Python version)
+
 	}
 
 	dirsToSearch = append(dirsToSearch, additionalDirectories...)
@@ -66,7 +66,7 @@ func (m *minecraftConfig) FindSystemJavaVersions(additionalDirectories []string)
 	for _, dir := range dirsToSearch {
 		found, err := findJavaDirectory(dir)
 		if err != nil {
-			// Optional: log or skip on error
+
 			continue
 		}
 		javaList = append(javaList, found...)
@@ -75,7 +75,7 @@ func (m *minecraftConfig) FindSystemJavaVersions(additionalDirectories []string)
 	return javaList, nil
 }
 
-func (m *minecraftConfig) GetJavaInformation(path string) (JavaInformation, error) {
+func GetJavaInformation(path string) (JavaInformation, error) {
 	binDir := filepath.Join(path, "bin")
 	javaExecutable := "java"
 	if runtime.GOOS == "windows" {
@@ -125,15 +125,15 @@ func (m *minecraftConfig) GetJavaInformation(path string) (JavaInformation, erro
 	return info, nil
 }
 
-func (m *minecraftConfig) GetSystemJavaVersionInformation(additionalDirectories []string) ([]JavaInformation, error) {
-	javaPaths, err := m.FindSystemJavaVersions(additionalDirectories)
+func GetSystemJavaVersionInformation(additionalDirectories []string) ([]JavaInformation, error) {
+	javaPaths, err := FindSystemJavaVersions(additionalDirectories)
 	if err != nil {
 		return nil, err
 	}
 
 	var infos []JavaInformation
 	for _, path := range javaPaths {
-		info, err := m.GetJavaInformation(path)
+		info, err := GetJavaInformation(path)
 		if err != nil {
 			log.Printf("warning: failed to get info for %s: %v", path, err)
 			continue

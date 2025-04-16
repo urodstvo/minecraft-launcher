@@ -3,7 +3,6 @@ package minecraft
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"math/rand"
 	"net/http"
 	"os"
@@ -32,32 +31,21 @@ func getUserAgent() string {
 		return _userAgentCache
 	}
 
-	versionFilePath := ".version" 
-	file, err := os.Open(versionFilePath)
+	versionFilePath := ".version"
+	data, err := os.ReadFile(versionFilePath)
 	if err != nil {
-		fmt.Println("Failed to open file: %w", err)
 		return ""
-	}
-	defer file.Close()
+	} 	
 
-	fileContent, err := io.ReadAll(file)
-	if err != nil {
-		fmt.Println("Error reading .version:", err)
-		return ""
-	}
-
-	_userAgentCache = "minecraft-launcher/" + strings.TrimSpace(string(fileContent))
+	_userAgentCache = "urodstvo-launcher/" + strings.TrimSpace(string(data))
 	return _userAgentCache
 }
 
-
-
-func getLibraryVersion() string {
+func GetLibraryVersion() string {
 	_versionOnce.Do(func() {		
 		filePath := ".version" 
 		data, err := os.ReadFile(filePath)
 		if err != nil {
-			fmt.Println("Error reading .version:", err)
 			_versionCache = "unknown"
 			return
 		}
@@ -67,12 +55,7 @@ func getLibraryVersion() string {
 	return _versionCache
 }
 
-func (m *minecraftConfig) GetLibraryVersion() string{
-	return getLibraryVersion()
-}
-
-// return default minecraft directories
-func (m *minecraftConfig) GetMinecraftDirectory() string {
+func GetMinecraftDirectory() string {
 	switch runtime.GOOS {
 	case "windows":
 		appData := os.Getenv("APPDATA")
@@ -114,7 +97,7 @@ func getRequestsResponseCache(url string) (*http.Response, error) {
 	return resp, nil
 }
 
-func (m *minecraftConfig) GetLatestVersion() (LatestMinecraftVersions, error) {
+func GetLatestVersion() (LatestMinecraftVersions, error) {
 	resp, err := getRequestsResponseCache("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json")
 	if err != nil {
 		return LatestMinecraftVersions{}, err
@@ -131,8 +114,7 @@ func (m *minecraftConfig) GetLatestVersion() (LatestMinecraftVersions, error) {
 	return result.Latest, nil
 }
 
-
-func (m *minecraftConfig) GetVersionList() ([]MinecraftVersionInfo, error) {
+func GetVersionList() ([]MinecraftVersionInfo, error) {
 	resp, err := getRequestsResponseCache("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json")
 	if err != nil {
 		return nil, err
@@ -157,12 +139,12 @@ func (m *minecraftConfig) GetVersionList() ([]MinecraftVersionInfo, error) {
 	return res, nil
 }
 
-func (m *minecraftConfig) GetInstalledVersions(minecraftDirectory string) ([]MinecraftVersionInfo, error) {
+func GetInstalledVersions(minecraftDirectory string) ([]MinecraftVersionInfo, error) {
 	versionsPath := filepath.Join(minecraftDirectory, "versions")
 	dirEntries, err := os.ReadDir(versionsPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return []MinecraftVersionInfo{}, nil // Gracefully return empty slice
+			return []MinecraftVersionInfo{}, nil
 		}
 		return nil, err
 	}
@@ -181,37 +163,25 @@ func (m *minecraftConfig) GetInstalledVersions(minecraftDirectory string) ([]Min
 			continue 
 		}
 
-		file, err := os.Open(jsonPath)
-		if err != nil {
-			fmt.Println("Failed to open file: %w", err)
-			return nil, err
-		}
-		defer file.Close()
-
-		data, err := io.ReadAll(file)
+		data, err := os.ReadFile(jsonPath)
 		if err != nil {
 			continue
 		}
 
-		var versionData struct {
-			ID              string `json:"id"`
-			Type            string `json:"type"`
-			ReleaseTime     string `json:"releaseTime"`
-			ComplianceLevel int    `json:"complianceLevel"`
-		}
+		var versionData versionListManifestJsonVersion
 		if err := json.Unmarshal(data, &versionData); err != nil {
 			continue
 		}
 
 		releaseTime, err := time.Parse(time.RFC3339, versionData.ReleaseTime)
 		if err != nil {
-			releaseTime = time.Unix(0, 0) // Default to epoch if invalid
+			releaseTime = time.Unix(0, 0)
 		}
 
 		versionList = append(versionList, MinecraftVersionInfo{
-			Id:              versionData.ID,
+			Id:              versionData.Id,
 			Type:            versionData.Type,
-			ReleaseTime:     releaseTime,
+			ReleaseTime:     releaseTime.String(),
 			ComplianceLevel: versionData.ComplianceLevel,
 		})
 	}
@@ -219,13 +189,13 @@ func (m *minecraftConfig) GetInstalledVersions(minecraftDirectory string) ([]Min
 	return versionList, nil
 }
 
-func (m *minecraftConfig) GetAvailableVersions(minecraftDirectory string) ([]MinecraftVersionInfo, error) {
-	versionList, err := m.GetVersionList()
+func GetAvailableVersions(minecraftDirectory string) ([]MinecraftVersionInfo, error) {
+	versionList, err := GetVersionList()
 	if err != nil {
 		return nil, err
 	}
 
-	installedVersions, err := m.GetInstalledVersions(minecraftDirectory)
+	installedVersions, err := GetInstalledVersions(minecraftDirectory)
 	if err != nil {
 		return nil, err
 	}
@@ -248,7 +218,7 @@ func (m *minecraftConfig) GetAvailableVersions(minecraftDirectory string) ([]Min
 	return combinedVersions, nil
 }
 
-func (m *minecraftConfig) GenerateTestOptions() MinecraftOptions {
+func GenerateTestOptions() MinecraftOptions {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 	
 	username := fmt.Sprintf("Player%d", rand.Intn(900)+100) 
@@ -258,10 +228,11 @@ func (m *minecraftConfig) GenerateTestOptions() MinecraftOptions {
 		Username: username,
 		Uuid:     uuidValue,
 		Token:    "", 
+		Demo: false,
 	}
 }
 
-func (m *minecraftConfig) IsPlatformSupported() bool {
+func IsPlatformSupported() bool {
 	switch runtime.GOOS {
 	case "windows", "darwin", "linux":
 		return true
@@ -270,7 +241,7 @@ func (m *minecraftConfig) IsPlatformSupported() bool {
 	}
 }
 
-func (m *minecraftConfig) IsMinecraftInstalled(minecraftDirectory string) bool {
+func IsMinecraftInstalled(minecraftDirectory string) bool {
 	requiredDirs := []string{"versions", "libraries", "assets"}
 
 	for _, dir := range requiredDirs {

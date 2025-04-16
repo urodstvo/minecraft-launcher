@@ -1,18 +1,15 @@
 package minecraft
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 )
 
 func getLibraries(data ClientJson, path string) string {
-	classpathSeparator := getClasspathSeparator()
 	var libstr string
+	classpathSeparator := getClasspathSeparator()
 
 	for _, i := range data.Libraries {
 		if len(i.Rules) > 0 && !parseRuleList(i.Rules, nil) {
@@ -21,6 +18,7 @@ func getLibraries(data ClientJson, path string) string {
 
 		libstr += getLibraryPath(i.Name, path) + classpathSeparator
 		native := getNatives(i)
+
 		if native != "" {
 			if download, exists := i.Downloads.Classifiers[native]; exists {
 				libstr += filepath.Join(path, "libraries", download.Path) + classpathSeparator
@@ -46,7 +44,7 @@ func replaceArguments(argstr string, versionData ClientJson, path string, option
 	}
 	argstr = strings.ReplaceAll(argstr, "${launcher_name}", options.LauncherName)
 	if options.LauncherVersion == "" {
-		options.LauncherVersion = getLibraryVersion()
+		options.LauncherVersion = GetLibraryVersion()
 	}
 	argstr = strings.ReplaceAll(argstr, "${launcher_version}", options.LauncherVersion)
 	argstr = strings.ReplaceAll(argstr, "${classpath}", classpath)
@@ -111,14 +109,11 @@ func replaceArguments(argstr string, versionData ClientJson, path string, option
 	return argstr
 }
 
-
-
 func getArgumentsString(versionData ClientJson, path string, options MinecraftOptions, classpath string) []string {
 	arglist := []string{}
 
-	args := strings.Split(versionData.MinecraftArguments, " ")
-
-	for _, v := range args {
+	args := strings.SplitSeq(versionData.MinecraftArguments, " ")
+	for v := range args {
 		v = replaceArguments(v, versionData, path, options, classpath)
 		arglist = append(arglist, v)
 	}
@@ -132,33 +127,6 @@ func getArgumentsString(versionData ClientJson, path string, options MinecraftOp
 	}
 
 	return arglist
-}
-
-func convertRulesToClientJsonRules(rules []any) ([]ClientJsonRule, error) {
-	var clientRules []ClientJsonRule
-	for _, rule := range rules {
-		if ruleMap, ok := rule.(map[string]interface{}); ok {
-			var clientRule ClientJsonRule
-			if action, ok := ruleMap["action"].(string); ok {
-				clientRule.Action = action
-			}
-			if osMap, ok := ruleMap["os"].(map[string]interface{}); ok {
-				if name, ok := osMap["name"].(string); ok {
-					clientRule.Os.Name = &name
-				}
-				if arch, ok := osMap["arch"].(string); ok {
-					clientRule.Os.Arch = &arch
-				}
-				if version, ok := osMap["version"].(string); ok {
-					clientRule.Os.Version = &version
-				}
-			}
-			clientRules = append(clientRules, clientRule)
-		} else {
-			return nil, fmt.Errorf("invalid rule type, expected map[string]interface{} but got %s", reflect.TypeOf(rule))
-		}
-	}
-	return clientRules, nil
 }
 
 func getArguments(data []any, versionData ClientJson, path string, options MinecraftOptions, classpath string) []string {
@@ -202,28 +170,25 @@ func getArguments(data []any, versionData ClientJson, path string, options Minec
 	return arglist
 }
 
-func (m *minecraftConfig) GetMinecraftCommand(version string, options MinecraftOptions) ([]string, error) {
-	path := m.Config.Directory
+func GetMinecraftCommand(version string, options MinecraftOptions) ([]string, error) {
+	if options.GameDirectory == "" {
+		options.GameDirectory = GetMinecraftDirectory()
+	}
+	path := options.GameDirectory
 
 	versionDir := filepath.Join(path, "versions", version)
 	if _, err := os.Stat(versionDir); os.IsNotExist(err) {
-		return nil, errors.New("version not found")
+		return nil, ErrorVersionNotFound
 	}
 
 	filePath := filepath.Join(path, "versions", version, version + ".json")
-	file, err := os.Open(filePath)
+	data, err := readJSON[ClientJson](filePath)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
 
-	var data ClientJson
-	if err := json.NewDecoder(file).Decode(&data); err != nil {
-		return nil, err
-	}
-
-	if data.InheritsFrom != "" {
-		data, err = inheritJson(data, m.Config.Directory)
+if data.InheritsFrom != "" {
+		data, err = inheritJson(data, path)
 		if err != nil {
 			return nil, err
 		}
@@ -291,5 +256,5 @@ func (m *minecraftConfig) GetMinecraftCommand(version string, options MinecraftO
 		command = append(command, "--disableChat")
 	}
 
-	return command, nil
+return command, nil
 }

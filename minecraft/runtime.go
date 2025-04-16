@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path"
@@ -44,24 +43,13 @@ func getJVMPlatform() string {
 	}
 }
 
-func getJVMRuntimes() ([]string, error) {
-	resp, err := http.Get(JVM_MANIFEST_URL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get JVM manifest: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+func GetJVMRuntimes() ([]string, error) {
+	manifest, err := fetch[map[string]map[string]any](JVM_MANIFEST_URL)
+	if err != nil {		
+		return nil, fmt.Errorf("error fetching platform manifest: %v", err)
 	}
 
-	var manifest map[string]map[string]any
-	if err := json.Unmarshal(body, &manifest); err != nil {
-		return nil, fmt.Errorf("failed to parse JVM manifest: %w", err)
-	}
-
-	platform := getJVMPlatform()
+platform := getJVMPlatform()
 	platformData, ok := manifest[platform]
 	if !ok {
 		return nil, fmt.Errorf("platform %s not found in manifest", platform)
@@ -75,7 +63,7 @@ func getJVMRuntimes() ([]string, error) {
 	return runtimes, nil
 }
 
-func getInstalledJVMRuntimes(minecraftDir string) ([]string, error) {
+func GetInstalledJVMRuntimes(minecraftDir string) ([]string, error) {
 	runtimeDir := filepath.Join(minecraftDir, "runtime")
 	entries, err := os.ReadDir(runtimeDir)
 	if os.IsNotExist(err) {
@@ -115,8 +103,7 @@ func getExecutablePath(jvmVersion, minecraftDir string) string {
 	return ""
 }
 
-
-func getJvmRuntimeInformation(jvmVersion string) (*JVMRuntimeInformation, error) {
+func GetJvmRuntimeInformation(jvmVersion string) (*JVMRuntimeInformation, error) {
 	platform := getJVMPlatform()
 
 	resp, err := http.Get(JVM_MANIFEST_URL)
@@ -160,7 +147,7 @@ func getJvmRuntimeInformation(jvmVersion string) (*JVMRuntimeInformation, error)
 	}, nil
 }
 
-func getVersionRuntimeInformation(versionID string, mcDir string) (*VersionRuntimeInformation, error) {
+func GetVersionRuntimeInformation(versionID string, mcDir string) (*VersionRuntimeInformation, error) {
 	data, err := getClientJson(versionID, mcDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load client json: %w", err)
@@ -235,27 +222,26 @@ func installRuntimeFile(key string, value platformManifestJsonFile, basePath str
 	return nil
 }
 
-func (m *minecraftConfig) installJVMRuntime(jvmVersion string) error {
+func installJVMRuntime(jvmVersion string, mcDir string) error {
 	platform := getJVMPlatform()
-	runtimePath := filepath.Join(m.Config.Directory, "runtime", jvmVersion, platform, jvmVersion)
+	runtimePath := filepath.Join(mcDir, "runtime", jvmVersion, platform, jvmVersion)
 
-	manifestData, err := fetchManifestData(JVM_MANIFEST_URL)
-	if err != nil {
-		return fmt.Errorf("failed to get JVM manifest: %w", err)
+	manifestData, err := fetch[RuntimeListJson](JVM_MANIFEST_URL)
+	if err != nil {		
+		return fmt.Errorf("error fetching jvm manifest: %v", err)
 	}
 
-	runtimeList, ok := manifestData[platform][jvmVersion]
+runtimeList, ok := manifestData[platform][jvmVersion]
 	if !ok || len(runtimeList) == 0 {
 		return fmt.Errorf("JVM runtime not found or unsupported for platform: %s", jvmVersion)
 	}
 
-	platformManifest, err := fetchPlatformManifest(runtimeList[0].Manifest.Url)
-	if err != nil {
-		return err
+	platformManifest, err := fetch[PlatformManifestJson](runtimeList[0].Manifest.Url)
+	if err != nil {		
+		return fmt.Errorf("error fetching platform manifest: %v", err)
 	}
 
-
-	basePath := path.Join(m.Config.Directory, "runtime", jvmVersion, platform, jvmVersion)
+basePath := path.Join(mcDir, "runtime", jvmVersion, platform, jvmVersion)
 
 	var fileList []string
 	var mu sync.Mutex
@@ -269,21 +255,18 @@ func (m *minecraftConfig) installJVMRuntime(jvmVersion string) error {
 		go func(p string, f platformManifestJsonFile) {
 			defer wg.Done()
 			defer func() { <-sem }() 
-			err := installRuntimeFile(p, f, basePath, m.Config.Directory, &fileList, &mu)
-			if err != nil {
-				fmt.Printf("Error installing file %s: %v\n", p, err)
-			}
+			installRuntimeFile(p, f, basePath, mcDir, &fileList, &mu)
 		}(path, file)
 	}
 
 	wg.Wait()
 
-	versionPath := filepath.Join(m.Config.Directory, "runtime", jvmVersion, platform, ".version")
+	versionPath := filepath.Join(mcDir, "runtime", jvmVersion, platform, ".version")
 	if err := os.WriteFile(versionPath, []byte(runtimeList[0].Version.Name), 0644); err != nil {
 		return err
 	}
 
-	sha1Path := filepath.Join(m.Config.Directory, "runtime", jvmVersion, platform, fmt.Sprintf("%s.sha1", jvmVersion))
+	sha1Path := filepath.Join(mcDir, "runtime", jvmVersion, platform, fmt.Sprintf("%s.sha1", jvmVersion))
 	f, err := os.Create(sha1Path)
 	if err != nil {
 		return err
@@ -303,50 +286,3 @@ func (m *minecraftConfig) installJVMRuntime(jvmVersion string) error {
 	return nil
 }
 
-func fetchManifestData(url string) (RuntimeListJson, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return RuntimeListJson{}, fmt.Errorf("failed to fetch manifest data: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return RuntimeListJson{}, fmt.Errorf("received non-200 response: %s", resp.Status)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return RuntimeListJson{}, fmt.Errorf("failed to read response body: %v", err)
-	}
-
-	var manifestData RuntimeListJson
-	if err := json.Unmarshal(body, &manifestData); err != nil {
-		return RuntimeListJson{}, fmt.Errorf("failed to unmarshal JSON: %v", err)
-	}
-
-	return manifestData, nil
-}
-
-func fetchPlatformManifest(url string) (*PlatformManifestJson, error) {	
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch platform manifest data: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("received non-200 response: %s", resp.Status)
-	}
-
-		body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %v", err)
-	}
-	
-	var platformManifest PlatformManifestJson
-	if err := json.Unmarshal(body, &platformManifest); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON: %v", err)
-	}
-
-	return &platformManifest, nil
-}
