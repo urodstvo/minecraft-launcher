@@ -1,63 +1,36 @@
 package main
 
 import (
-	"github.com/urodstvo/minecraft-launcher/launcher"
-	"github.com/urodstvo/minecraft-launcher/utils"
-	webview "github.com/webview/webview_go"
+	"embed"
+
+	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/options"
+	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 )
 
-func main(){
-	logger := utils.Logger{}
-	ui := &launcher.UIView{
-		WV: webview.New(false),
-		Logger: logger,
-	}
-	l := launcher.Launcher{
-		Logger: logger,
-		Version: "0.0.0-alpha",
-		UI: ui,
-		// Minecraft: &launcher.Minecraft{},
-		Server: &launcher.Server{},
-		System: &launcher.System{},
-	}
-	l.Run()
-	// m := minecraft.GenerateTestOptions()
-	// m.GameDirectory = "Z:\\Games\\Minecraft"
-	// callback := &minecraft.Callback{
-	// 	Progress: func(message string) {
-	// 		fmt.Printf("[Progress] - %s\n", message)
-	// 	},
-	// 	Status: func(message string) {
-	// 		fmt.Printf("[Status] - %s\n", message)
-	// 	},
-	// 	Max: func(message string) {
-	// 		fmt.Printf("[Max] - %s\n", message)
-	// 	},
-	// }
-	// err := minecraft.InstallMinecraftVersion("1.21.3", m, callback)
-	// if err != nil {
-	// 	fmt.Printf("[ERROR] %v", err)
-	// 	return
-	// } else {
-	// 	fmt.Println("Minecraft version in installed")
-	// }
-	// command, err := minecraft.GetMinecraftCommand("1.21.3", m)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// } 
-	// // fmt.Println(command)	
-	// javaPath := command[0]
-	// javaArgs := command[1:]
-	// cmd := exec.Command(javaPath, javaArgs...)
-	// cmd.Stdout = os.Stdout
-	// cmd.Stderr = os.Stderr
-	// cmd.Stdin = os.Stdin
-	// fmt.Println("Запуск Minecraft...")
+//go:embed all:frontend/dist
+var assets embed.FS
 
-	// // Запускаем
-	// err = cmd.Run()
-	// if err != nil {
-	// 	fmt.Println("Ошибка при запуске:", err)
-	// }
+func main() {
+	// Create an instance of the app structure
+	app := NewApp()
+
+	// Create application with options
+	err := wails.Run(&options.App{
+		Title:  "myproject",
+		Width:  1024,
+		Height: 768,
+		AssetServer: &assetserver.Options{
+			Assets: assets,
+		},
+		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
+		OnStartup:        app.startup,
+		Bind: []interface{}{
+			app,
+		},
+	})
+
+	if err != nil {
+		println("Error:", err.Error())
+	}
 }
