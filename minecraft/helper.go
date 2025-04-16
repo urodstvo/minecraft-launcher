@@ -52,7 +52,7 @@ func checkPathInsideMinecraftDirectory(minecraftDir, path string) error {
 	return nil
 }
 
-func downloadFile(url, path, minecraftDir string, sha1Hash string, overwrite, compressed bool) error {
+func downloadFile(url, path, minecraftDir string, sha1Hash string, overwrite bool) error {
 	if minecraftDir != "" {
 		err := checkPathInsideMinecraftDirectory(minecraftDir, path)
 		if err != nil {
@@ -95,22 +95,78 @@ func downloadFile(url, path, minecraftDir string, sha1Hash string, overwrite, co
 		return err
 	}
 	defer file.Close()
-
-	if compressed {
-		reader, err := lzma.NewReader(resp.Body)
-		if err != nil {
-			return fmt.Errorf("error creating lzma reader: %v", err)
-		}
-		_, err = io.Copy(file, reader)
+	
+	_, err = io.Copy(file, resp.Body)
+	if err != nil {
+		return err
+	}
+	
+	if sha1Hash != "" {
+		computedSHA1, err := getSHA1Hash(path)
 		if err != nil {
 			return err
 		}
-	} else {
-		_, err = io.Copy(file, resp.Body)
+
+		if computedSHA1 != sha1Hash {
+			return fmt.Errorf("invalid checksum: expected %s, got %s", sha1Hash, computedSHA1)
+		}
+	}
+
+	return nil
+}
+
+func downloadCompressedFile(url, path, minecraftDir string, sha1Hash string, overwrite bool) error {
+	if minecraftDir != "" {
+		err := checkPathInsideMinecraftDirectory(minecraftDir, path)
 		if err != nil {
 			return err
 		}
 	}
+
+	if _, err := os.Stat(path); err == nil && !overwrite {
+		if sha1Hash == "" { 
+			return nil
+		}
+
+		computedSHA1, err := getSHA1Hash(path)
+		if err != nil {
+			return err
+		}
+
+		if computedSHA1 == sha1Hash {
+			return nil
+		}
+	}
+
+	err := os.MkdirAll(filepath.Dir(path), os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("failed to download file: status code %d", resp.StatusCode)
+	}
+
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	reader, err := lzma.NewReader(resp.Body)
+	if err != nil {
+		return fmt.Errorf("error creating lzma reader: %v", err)
+	}
+	_, err = io.Copy(file, reader)
+	if err != nil {
+		return err
+	}	
 
 	if sha1Hash != "" {
 		computedSHA1, err := getSHA1Hash(path)
@@ -179,7 +235,7 @@ func parseSingleRule(rule ClientJsonRule, options *MinecraftOptions) bool {
 		}
 	}
 
-if rule.Features != nil {
+	if rule.Features != nil {
 		if !options.CustomResolution && rule.Features.HasCustomResolution != nil && *rule.Features.HasCustomResolution  {
 			return returnValue
 		}
@@ -424,11 +480,11 @@ func convertRulesToClientJsonRules(rules []any) ([]ClientJsonRule, error) {
 
 		var clientRule ClientJsonRule
 
-if action, ok := ruleMap["action"].(string); ok {
+		if action, ok := ruleMap["action"].(string); ok {
 			clientRule.Action = action
 		}
 
-if osMap, ok := ruleMap["os"].(map[string]any); ok {
+		if osMap, ok := ruleMap["os"].(map[string]any); ok {
 			if name, ok := osMap["name"].(string); ok {
 				clientRule.Os.Name = &name
 			}
@@ -440,7 +496,7 @@ if osMap, ok := ruleMap["os"].(map[string]any); ok {
 			}
 		}
 
-if featuresMap, ok := ruleMap["features"].(map[string]any); ok {
+		if featuresMap, ok := ruleMap["features"].(map[string]any); ok {
 			features := &struct {
 				HasCustomResolution     *bool `json:"has_custom_resolution"`
 				IsDemoUser              *bool `json:"is_demo_user"`

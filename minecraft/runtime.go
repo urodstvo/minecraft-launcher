@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -49,7 +50,7 @@ func GetJVMRuntimes() ([]string, error) {
 		return nil, fmt.Errorf("error fetching platform manifest: %v", err)
 	}
 
-platform := getJVMPlatform()
+	platform := getJVMPlatform()
 	platformData, ok := manifest[platform]
 	if !ok {
 		return nil, fmt.Errorf("platform %s not found in manifest", platform)
@@ -185,7 +186,13 @@ func installRuntimeFile(key string, value platformManifestJsonFile, basePath str
 			sha1 = value.Downloads["raw"].SHA1
 		}
 
-		if err := downloadFile(downloadURL, currentPath, "", sha1, false, compressed); err != nil {
+		var err error
+		if compressed {
+			err = downloadCompressedFile(downloadURL, currentPath, minecraftDirectory, sha1, false); 
+		} else {
+			err = downloadFile(downloadURL, currentPath, minecraftDirectory, sha1, false); 
+		}
+		if err != nil {
 			return err
 		}
 
@@ -222,7 +229,7 @@ func installRuntimeFile(key string, value platformManifestJsonFile, basePath str
 	return nil
 }
 
-func installJVMRuntime(jvmVersion string, mcDir string) error {
+func installJVMRuntime(jvmVersion string, mcDir string, callback Callback) error {
 	platform := getJVMPlatform()
 	runtimePath := filepath.Join(mcDir, "runtime", jvmVersion, platform, jvmVersion)
 
@@ -231,7 +238,7 @@ func installJVMRuntime(jvmVersion string, mcDir string) error {
 		return fmt.Errorf("error fetching jvm manifest: %v", err)
 	}
 
-runtimeList, ok := manifestData[platform][jvmVersion]
+	runtimeList, ok := manifestData[platform][jvmVersion]
 	if !ok || len(runtimeList) == 0 {
 		return fmt.Errorf("JVM runtime not found or unsupported for platform: %s", jvmVersion)
 	}
@@ -241,25 +248,48 @@ runtimeList, ok := manifestData[platform][jvmVersion]
 		return fmt.Errorf("error fetching platform manifest: %v", err)
 	}
 
-basePath := path.Join(mcDir, "runtime", jvmVersion, platform, jvmVersion)
+	basePath := path.Join(mcDir, "runtime", jvmVersion, platform, jvmVersion)
 
 	var fileList []string
 	var mu sync.Mutex
 	var wg sync.WaitGroup
-	sem := make(chan struct{}, maxWorkers)
+	var progressWG sync.WaitGroup
+	sem := make(chan struct{}, maxWorkers) 
+	progressCh := make(chan int, len(platformManifest.Files))
+
+	callback.Status("Downloading JVM Runtime Files...")
+	callback.Progress("0")
+	callback.Max(strconv.Itoa(len(platformManifest.Files)))
+
+	progressWG.Add(1)
+	go func() {
+		defer progressWG.Done()
+		completed := 0
+		for progress := range progressCh {
+			completed += progress
+			callback.Progress(strconv.Itoa(completed))
+		}
+	}()
 
 	for path, file := range platformManifest.Files {
-		sem <- struct{}{}
 		wg.Add(1)
-		
+		sem <- struct{}{}
 		go func(p string, f platformManifestJsonFile) {
 			defer wg.Done()
-			defer func() { <-sem }() 
+			defer func() { <-sem }()
 			installRuntimeFile(p, f, basePath, mcDir, &fileList, &mu)
+			progressCh <- 1
 		}(path, file)
 	}
 
-	wg.Wait()
+	wg.Wait() 
+	close(progressCh)
+	progressWG.Wait()
+
+	callback.Status("JVM Runtime Files download complete.")
+	callback.Status("Installing JVM Runtime Files...")
+	callback.Progress("0")
+    callback.Max("1")
 
 	versionPath := filepath.Join(mcDir, "runtime", jvmVersion, platform, ".version")
 	if err := os.WriteFile(versionPath, []byte(runtimeList[0].Version.Name), 0644); err != nil {
@@ -282,6 +312,9 @@ basePath := path.Join(mcDir, "runtime", jvmVersion, platform, jvmVersion)
 		}
 		fmt.Fprintf(f, "%s /#// %s %d\n", file, hash, stat.ModTime().UnixNano())
 	}
+
+	callback.Progress("1")
+	callback.Status("JVM Runtime Files install complete.")
 
 	return nil
 }

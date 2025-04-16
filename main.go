@@ -25,18 +25,30 @@ func main(){
 	// l.Run()
 	m := minecraft.GenerateTestOptions()
 	m.GameDirectory = "Z:\\Games\\Minecraft"
-	// err := minecraft.InstallMinecraftVersion("1.21.5", m)
-	// if err != nil {
-	// 	fmt.Printf("[ERROR] %v", err)
-	// } else {
-	// 	fmt.Println("Minecraft version in installed")
-	// }
-	command, err := minecraft.GetMinecraftCommand("1.21.5", m)
+	callback := &minecraft.Callback{
+		Progress: func(message string) {
+			fmt.Printf("[Progress] - %s\n", message)
+		},
+		Status: func(message string) {
+			fmt.Printf("[Status] - %s\n", message)
+		},
+		Max: func(message string) {
+			fmt.Printf("[Max] - %s\n", message)
+		},
+	}
+	err := minecraft.InstallMinecraftVersion("1.21.3", m, callback)
+	if err != nil {
+		fmt.Printf("[ERROR] %v", err)
+		return
+	} else {
+		fmt.Println("Minecraft version in installed")
+	}
+	command, err := minecraft.GetMinecraftCommand("1.21.3", m)
 	if err != nil {
 		fmt.Println(err)
 		return
 	} 
-	fmt.Println(command)	
+	// fmt.Println(command)	
 	javaPath := command[0]
 	javaArgs := command[1:]
 	cmd := exec.Command(javaPath, javaArgs...)

@@ -217,3 +217,11 @@ type requestsResponseCache struct {
 	Response *http.Response
 	Datetime time.Time
 }
+
+type ProgressCallback func(message string)
+
+type Callback struct {
+	Status ProgressCallback
+	Progress ProgressCallback
+	Max ProgressCallback
+}
