@@ -17,7 +17,7 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:  "Minecraft Launcher by urodstvo.",
+		Title: app.mc.LauncherName,
 		Width:  1024,
 		Height: 768,
 		DisableResize: true,

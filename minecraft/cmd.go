@@ -204,7 +204,7 @@ if data.InheritsFrom != "" {
 	if options.ExecutablePath != "" {
 		command = append(command, options.ExecutablePath)
 	} else if data.JavaVersion.Component != "" {
-		javaPath := getExecutablePath(data.JavaVersion.Component, path)
+		javaPath := GetExecutablePath(data.JavaVersion.Component, path)
 		if javaPath == "" {
 			command = append(command, "java")
 		} else {

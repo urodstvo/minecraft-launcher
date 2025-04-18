@@ -1,7 +1,6 @@
 package minecraft
 
 import (
-	"net/http"
 	"time"
 )
 
@@ -207,14 +206,14 @@ type LatestMinecraftVersions struct {
 }
 
 type MinecraftVersionInfo struct {
-	Id string
-    Type string
-    ReleaseTime string
-    ComplianceLevel int
+	Id string `json:"id"`
+    Type string `json:"type"`
+    ReleaseTime string `json:"releaseTime"`
+    ComplianceLevel int `json:"complianceLevel"`
 }
 
 type requestsResponseCache struct {
-	Response *http.Response
+	Response []byte
 	Datetime time.Time
 }
 

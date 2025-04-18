@@ -83,7 +83,7 @@ func GetInstalledJVMRuntimes(minecraftDir string) ([]string, error) {
 	return runtimes, nil
 }
 
-func getExecutablePath(jvmVersion, minecraftDir string) string {
+func GetExecutablePath(jvmVersion, minecraftDir string) string {
 	platform := getJVMPlatform()
 
 	basePath := filepath.Join(minecraftDir, "runtime", jvmVersion, platform, jvmVersion)

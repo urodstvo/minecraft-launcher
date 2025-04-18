@@ -3,6 +3,7 @@ package minecraft
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/rand"
 	"net/http"
 	"os"
@@ -43,7 +44,7 @@ func getUserAgent() string {
 
 func GetLibraryVersion() string {
 	_versionOnce.Do(func() {		
-		filePath := ".version" 
+		filePath := "minecraft/.version" 
 		data, err := os.ReadFile(filePath)
 		if err != nil {
 			_versionCache = "unknown"
@@ -73,7 +74,7 @@ func GetMinecraftDirectory() string {
 	}
 }
 
-func getRequestsResponseCache(url string) (*http.Response, error) {
+func getRequestsResponseCache(url string) ([]byte, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -86,15 +87,23 @@ func getRequestsResponseCache(url string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusOK {
-		_requestsResponseCache[url] = requestsResponseCache{
-			Response: resp,
-			Datetime: time.Now(),
-		}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	return resp, nil
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	_requestsResponseCache[url] = requestsResponseCache{
+		Response:     body,
+		Datetime: time.Now(),
+	}
+
+	return body, nil
 }
 
 func GetLatestVersion() (LatestMinecraftVersions, error) {
@@ -102,12 +111,11 @@ func GetLatestVersion() (LatestMinecraftVersions, error) {
 	if err != nil {
 		return LatestMinecraftVersions{}, err
 	}
-	defer resp.Body.Close()
 
 	var result struct {
 		Latest LatestMinecraftVersions `json:"latest"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.Unmarshal(resp, &result); err != nil {
 		return LatestMinecraftVersions{}, err
 	}
 
@@ -115,23 +123,22 @@ func GetLatestVersion() (LatestMinecraftVersions, error) {
 }
 
 func GetVersionList() ([]MinecraftVersionInfo, error) {
-	resp, err := getRequestsResponseCache("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json")
+	body, err := getRequestsResponseCache("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json")
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
 	var vlist VersionListManifestJson
-	if err := json.NewDecoder(resp.Body).Decode(&vlist); err != nil {
+	if err := json.Unmarshal(body, &vlist); err != nil {
 		return nil, err
 	}
 
 	var res []MinecraftVersionInfo
 	for _, v := range vlist.Versions {
 		res = append(res, MinecraftVersionInfo{
-			Id: v.Id,
-			Type: v.Type,
-			ReleaseTime: v.ReleaseTime,
+			Id:              v.Id,
+			Type:            v.Type,
+			ReleaseTime:     v.ReleaseTime,
 			ComplianceLevel: int(v.ComplianceLevel),
 		})
 	}

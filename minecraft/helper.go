@@ -304,10 +304,9 @@ func getClientJson(version string, minecraftDirectory string) (ClientJson, error
 	if err != nil {
 		return ClientJson{}, err
 	}
-	defer resp.Body.Close()
 
 	var versionList map[string][]map[string]string
-	if err := json.NewDecoder(resp.Body).Decode(&versionList); err != nil {
+	if err := json.Unmarshal(resp, &versionList); err != nil {
 		return ClientJson{}, err
 	}
 
@@ -317,10 +316,9 @@ func getClientJson(version string, minecraftDirectory string) (ClientJson, error
 			if err != nil {
 				return ClientJson{}, err
 			}
-			defer resp.Body.Close()
 
 			var clientData ClientJson
-			if err := json.NewDecoder(resp.Body).Decode(&clientData); err != nil {
+			if err := json.Unmarshal(resp, &clientData); err != nil {
 				return ClientJson{}, err
 			}
 
@@ -420,7 +418,7 @@ func getLibraryPath(name string, path string) string {
 	libName := parts[1]
 	version := parts[2]
 
-	for part := range strings.SplitSeq(basePath, ".") {
+	for _, part := range strings.Split(basePath, ".") {
 		libPath = filepath.Join(libPath, part)
 	}
 

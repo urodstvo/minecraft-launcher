@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterView } from 'vue-router'
 </script>
 
 <template>
-  <main class="p-5 h-screen w-screen">
-    <div class="size-full bg-zinc-400 rounded-[4px]">
+  <main class="p-5 h-screen w-screen bg-[#2e2e2e]">
+    <div class="size-full overflow-auto bg-[#e0e0e0]/10 rounded-[4px]">
       <RouterView />
     </div>
   </main>
