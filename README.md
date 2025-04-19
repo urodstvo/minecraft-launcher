@@ -3,5 +3,6 @@
 ### Roadmap
 
 - Time tracker
-- Analytics
+- Mods loader
+- Profiles
 - ...

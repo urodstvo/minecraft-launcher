@@ -569,3 +569,10 @@ func readJSON[T any](path string) (T, error) {
 	}
 	return data, nil
 }
+
+func derefStr(ptr *string) string {
+	if ptr == nil {
+		return ""
+	}
+	return *ptr
+}

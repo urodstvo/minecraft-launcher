@@ -9,6 +9,23 @@ import (
 
 var _launcherCachePath = "launcherCache.json"
 
+type LauncherAccount struct {
+	
+}
+
+type LauncherSettings struct {
+	GameDirectory string `json:"gameDirectory"`
+	AllocatedRAM int `json:"allocatedRAM,omitempty"`
+	JVMArguments string `json:"jvmArguments,omitempty"`
+	ShowAlpha bool `json:"showAlpha"`
+	ShowBeta bool `json:"showBeta"`
+	ShowSnaphots bool `json:"showSnapshots"`
+	ShowOldVersions bool `json:"showOldVersions"`
+	ShowOnlyInstalled bool `json:"showOnlyInstalled"`
+	ResolutionWidth int `json:"resolutionWidth,omitempty"`
+	ResolutionHeight int `json:"resolutionHeight,omitempty"`
+}
+
 type launcherCache struct {
 	LastPlayedVersion *minecraft.MinecraftVersionInfo `json:"last_played_version"`
 	Settings *LauncherSettings `json:"settings"`

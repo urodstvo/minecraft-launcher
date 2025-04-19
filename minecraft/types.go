@@ -224,3 +224,169 @@ type Callback struct {
 	Progress ProgressCallback
 	Max ProgressCallback
 }
+
+type Resolution struct {
+	Height int `json:"height"`
+	Width  int `json:"width"`
+}
+
+type VanillaLauncherProfilesJsonProfile struct {
+	Created       string     `json:"created,omitempty"`
+	GameDir       string     `json:"gameDir,omitempty"`
+	Icon          string     `json:"icon,omitempty"`
+	JavaArgs      string     `json:"javaArgs,omitempty"`
+	JavaDir       string     `json:"javaDir,omitempty"`
+	LastUsed      string     `json:"lastUsed,omitempty"`
+	LastVersionID string     `json:"lastVersionId,omitempty"`
+	Name          string     `json:"name,omitempty"`
+	Resolution    *Resolution `json:"resolution,omitempty"`
+	Type          string     `json:"type,omitempty"`
+}
+
+type VanillaLauncherProfilesJson struct {
+	Profiles map[string]VanillaLauncherProfilesJsonProfile `json:"profiles"`
+	Version  int                                            `json:"version"`
+}
+
+type VanillaLauncherProfile struct {
+	Name            string     `json:"name"`
+	VersionType     string     `json:"versionType"` // latest-release | latest-snapshot | custom
+	Version         *string    `json:"version,omitempty"`
+	GameDirectory   *string    `json:"gameDirectory,omitempty"`
+	JavaExecutable  *string    `json:"javaExecutable,omitempty"`
+	JavaArguments   []string   `json:"javaArguments,omitempty"`
+	CustomResolution *Resolution `json:"customResolution,omitempty"`
+}
+
+
+type AuthorizationTokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"`
+	Scope        string `json:"scope"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type Xui struct {
+	Uhs string `json:"uhs"`
+}
+
+type DisplayClaims struct {
+	Xui []Xui `json:"xui"`
+}
+
+type XBLResponse struct {
+	IssueInstant   string        `json:"IssueInstant"`
+	NotAfter       string        `json:"NotAfter"`
+	Token          string        `json:"Token"`
+	DisplayClaims  DisplayClaims `json:"DisplayClaims"`
+}
+
+type XSTSResponse struct {
+	IssueInstant    string        `json:"IssueInstant"`
+	NotAfter        string        `json:"NotAfter"`
+	Token           string        `json:"Token"`
+	DisplayClaims   DisplayClaims `json:"DisplayClaims"`
+}
+
+type MinecraftStoreItem struct {
+	Name      string `json:"name"`
+	Signature string `json:"signature"`
+}
+
+type MinecraftStoreResponse struct {
+	Items    []MinecraftStoreItem `json:"items"`
+	Signature string              `json:"signature"`
+	KeyID     string              `json:"keyId"`
+}
+
+type MinecraftAuthenticateResponse struct {
+	Username    string        `json:"username"`
+	Roles       []interface{} `json:"roles"`
+	AccessToken string        `json:"access_token"`
+	TokenType   string        `json:"token_type"`
+	ExpiresIn   int           `json:"expires_in"`
+}
+
+type MinecraftProfileInfo struct {
+	ID    string `json:"id"`
+	State string `json:"state"` // ACTIVE or INACTIVE
+	URL   string `json:"url"`
+}
+
+type MinecraftProfileSkin struct {
+	MinecraftProfileInfo
+	Variant string `json:"variant"`
+}
+
+type MinecraftProfileCape struct {
+	MinecraftProfileInfo
+	Alias string `json:"alias"`
+}
+
+type MinecraftProfileResponse struct {
+	ID            string                `json:"id"`
+	Name          string                `json:"name"`
+	Skins         []MinecraftProfileSkin `json:"skins"`
+	Capes         []MinecraftProfileCape `json:"capes"`
+	Error         string                `json:"error"`
+	ErrorMessage  string                `json:"errorMessage"`
+}
+
+type CompleteLoginResponse struct {
+	MinecraftProfileResponse
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type NewsEntryPlayPageImage struct {
+	Title string `json:"title"`
+	URL   string `json:"url"`
+}
+
+type NewsEntryNewsPageImageDimensions struct {
+	Width  int `json:"width"`
+	Height int `json:"height"`
+}
+
+type NewsEntryNewsPageImage struct {
+	Title      string                          `json:"title"`
+	URL        string                          `json:"url"`
+	Dimensions NewsEntryNewsPageImageDimensions `json:"dimensions"`
+}
+
+type NewsEntry struct {
+	Title         string                    `json:"title"`
+	Category      string                    `json:"category"`
+	Date          string                    `json:"date"`
+	Text          string                    `json:"text"`
+	PlayPageImage NewsEntryPlayPageImage    `json:"playPageImage"`
+	NewsPageImage NewsEntryNewsPageImage    `json:"newsPageImage"`
+	ReadMoreLink  string                    `json:"readMoreLink"`
+	NewsType      []string                  `json:"newsType"`
+	ID            string                    `json:"id"`
+}
+
+type MinecraftNews struct {
+	Version int         `json:"version"`
+	Entries []NewsEntry `json:"entries"`
+}
+
+type JavaPatchNoteEntryImage struct {
+	URL   string `json:"url"`
+	Title string `json:"title"`
+}
+
+type JavaPatchNoteEntry struct {
+	Title       string                  `json:"title"`
+	Type        string                  `json:"type"` // "release" | "snapshot"
+	Version     string                  `json:"version"`
+	Image       JavaPatchNoteEntryImage `json:"image"`
+	Body        string                  `json:"body"`
+	ContentPath string                  `json:"contentPath"`
+}
+
+type JavaPatchNotes struct {
+	Version int                 `json:"version"`
+	Entries []JavaPatchNoteEntry `json:"entries"`
+}

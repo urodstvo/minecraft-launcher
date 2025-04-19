@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os/exec"
 	"runtime"
 
@@ -11,21 +12,20 @@ import (
 	wruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-// App struct
 type App struct {
 	ctx context.Context
 	mc minecraft.MinecraftOptions
 	cache *launcherCache
 }
 
-// NewApp creates a new App application struct
 func NewApp() *App {
-	mc := minecraft.GenerateTestOptions()
-	mc.LauncherVersion = minecraft.GetLibraryVersion()
-	mc.LauncherName = "Minecraft Launcher by urodstvo."
+	mc := minecraft.MinecraftOptions{
+		LauncherVersion: minecraft.GetLibraryVersion(),
+		LauncherName: "Minecraft Launcher by urodstvo.",
+	}
 
 	cache := newCache()
-	mc.GameDirectory = cache.Settings.GameDirectory
+	LoadCacheToMinecraftOptions(*cache, &mc)
 
 	return &App{
 		mc: mc,
@@ -33,8 +33,6 @@ func NewApp() *App {
 	}
 }
 
-// startup is called when the app starts. The context is saved
-// so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
@@ -96,24 +94,16 @@ func (a *App) GetTotalRAM() (uint64, error) {
 	return vmStat.Total / 1024 / 1024, nil
 }
 
-type LauncherSettings struct {
-	GameDirectory string `json:"gameDirectory"`
-	AllocatedRAM int `json:"allocatedRAM,omitempty"`
-	JVMArguments string `json:"jvmArguments,omitempty"`
-	ShowAlpha bool `json:"showAlpha"`
-	ShowBeta bool `json:"showBeta"`
-	ShowSnaphots bool `json:"showSnapshots"`
-	ShowOldVersions bool `json:"showOldVersions"`
-	ShowOnlyInstalled bool `json:"showOnlyInstalled"`
-	ResolutionWidth int `json:"resolutionWidth,omitempty"`
-	ResolutionHeight int `json:"resolutionHeight,omitempty"`
-}
-
 func (a *App) SaveLauncherSettings(settings LauncherSettings) error  {
 	a.cache.Settings = &settings
-	a.mc.GameDirectory = settings.GameDirectory
 	err := a.cache.Save()
-	return err
+	if err != nil {
+		return err
+	}
+
+	LoadCacheToMinecraftOptions(*a.cache, &a.mc)
+
+	return nil
 }
 
 func (a *App) GetLauncherSettings() LauncherSettings {
@@ -127,6 +117,9 @@ type StartOptions struct {
 func (a *App) StartMinecraft(opts StartOptions) {
 	a.cache.LastPlayedVersion = opts.Version	
 	a.cache.Save()
+
+	fmt.Println(a.mc)
+	fmt.Println(a.cache)
 }
 
 func (a *App) ChooseDirectory() (string, error) {
