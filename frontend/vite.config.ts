@@ -11,7 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-      '@go': fileURLToPath(new URL('./wailsjs/go', import.meta.url)),
+      '@go': fileURLToPath(new URL('./bindings/urodstvo-launcher', import.meta.url)),
     },
   },
 })

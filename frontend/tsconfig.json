@@ -12,9 +12,11 @@
     }
   ],
   "compilerOptions": {
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@go/*": ["./wailsjs/go/*"]
+      "@go": ["./bindings/urodstvo-launcher"],
+      "@go/*": ["./bindings/urodstvo-launcher/*"]
     }
   }
 }
