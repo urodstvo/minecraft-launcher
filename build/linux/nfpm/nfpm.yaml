@@ -10,24 +10,23 @@ version: "0.1.0"
 section: "default"
 priority: "extra"
 maintainer: ${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>
-description: "My Product Description"
-vendor: "My Company"
-homepage: "https://wails.io"
+description: "Minecraft Launcher"
+vendor: "urodstvo"
+homepage: ""
 license: "MIT"
 release: "1"
 
 contents:
-  - src: "./bin/launcherasdasd.exe"
-    dst: "/usr/local/bin/launcherasdasd.exe"
+  - src: "./bin/launcher.exe"
+    dst: "/usr/local/bin/launcher.exe"
   - src: "./build/appicon.png"
-    dst: "/usr/share/icons/hicolor/128x128/apps/launcherasdasd.exe.png"
-  - src: "./build/linux/launcherasdasd.exe.desktop"
-    dst: "/usr/share/applications/launcherasdasd.exe.desktop"
+    dst: "/usr/share/icons/hicolor/128x128/apps/launcher.exe.png"
+  - src: "./build/linux/launcher.exe.desktop"
+    dst: "/usr/share/applications/launcher.exe.desktop"
 
 depends:
   - gtk3
   - libwebkit2gtk
-
 # replaces:
 #   - foobar
 # provides:

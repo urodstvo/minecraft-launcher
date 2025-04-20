@@ -19,8 +19,6 @@ var assets embed.FS
 func main() {
 
 	app := application.New(application.Options{
-		// Name: l.M.LauncherName,
-		// Description: l.M.LauncherVersion,
 		Name: "Minecraft Launcher",
 		Description: "by urodstvo",
 		Services: []application.Service{
@@ -37,22 +35,24 @@ func main() {
 
 	window := app.NewWebviewWindowWithOptions(application.WebviewWindowOptions{
 		Title:  "Minecraft Launcher",
+		Name: "Minecraft Launcher",
 		Width:  1024,
 		Height: 768,
 		DisableResize: true,
+		MaximiseButtonState: application.ButtonDisabled,
 	})
 
 	systemTray := app.NewSystemTray()
 	// if runtime.GOOS == "windows" {
-	// 	systemTray.SetIcon(icons.DefaultWindowsIcon)
+	// 	systemTray.SetTooltip("Minecraft Launcher")
 	// }
 	if runtime.GOOS == "darwin" {
 		systemTray.SetTemplateIcon(icons.SystrayMacTemplate)
 		systemTray.SetLabel("Minecraft Launcher")
-
 	}
 
 	myMenu := app.NewMenu()
+	// myMenu.SetLabel("Minecraft Launcher")
 	myMenu.Add("Quit").OnClick(func(ctx *application.Context) {
 		app.Quit()
 	})

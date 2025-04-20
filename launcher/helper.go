@@ -31,6 +31,20 @@ func LoadCacheToMinecraftOptions(cache launcherCache, mc *minecraft.MinecraftOpt
 		mc.GameDirectory = settings.GameDirectory
 		mc.CustomResolution = settings.ResolutionWidth > 0 && settings.ResolutionHeight > 0
 
+		if cache.SelectedAccount != "" {
+			var selected LauncherAccount
+			for _, v := range cache.Accounts {
+				if v.Id == cache.SelectedAccount {
+					selected = v
+					break
+				}
+			}
+
+			mc.Uuid = selected.Id 
+			mc.Username = selected.Name
+			mc.Token = selected.AccessToken
+		}
+
 		if settings.ResolutionWidth > 0 {
 			mc.ResolutionWidth = strconv.Itoa(settings.ResolutionWidth)
 		}

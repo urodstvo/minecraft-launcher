@@ -130,12 +130,17 @@ func (a *Launcher) ChooseDirectory() (string, error) {
 }
 
 func (a *Launcher) CreateFreeAccount(username string) {
-	a.cache.Accounts = append(a.cache.Accounts, LauncherAccount{
+	newAccount := LauncherAccount{
 		Name: username,
 		Id: uuid.New().String(),
-		AccessToken: "",
-	})
+		Type: "free",
+	}
+	a.cache.Accounts = append(a.cache.Accounts, newAccount)
 	a.cache.Save()
+
+	if len(a.cache.Accounts) == 1 {
+		a.SelectAccount(newAccount.Id)
+	}
 }
 
 // func (a *App) GetSecureMicrosoftLoginURL() (string, error) {
@@ -144,7 +149,19 @@ func (a *Launcher) CreateFreeAccount(username string) {
 // }
 
 func (a *Launcher) SelectAccount(id string) {
-	a.cache.SelectedAccount = id
+	var selected LauncherAccount
+	for _, v := range a.cache.Accounts {
+		if v.Id == id {
+			selected = v
+			break
+		}
+	}
+
+	a.cache.SelectedAccount = selected.Id
+	a.M.Uuid = selected.Id 
+	a.M.Username = selected.Name
+	a.M.Token = selected.AccessToken
+	
 	a.cache.Save()
 }
 

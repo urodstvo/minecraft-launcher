@@ -1,5 +1,10 @@
 {
-  "last_played_version": null,
+  "last_played_version": {
+    "id": "1.21.5",
+    "type": "release",
+    "releaseTime": "2025-03-25T12:14:58+00:00",
+    "complianceLevel": 1
+  },
   "settings": {
     "gameDirectory": "Z:\\Games\\Minecraft",
     "allocatedRAM": 8192,
@@ -8,5 +13,30 @@
     "showSnapshots": false,
     "showOldVersions": false,
     "showOnlyInstalled": false
-  }
+  },
+  "selectedAccount": "186e4adf-b344-4527-a1c1-12fad1bcd67b",
+  "accounts": [
+    {
+      "id": "186e4adf-b344-4527-a1c1-12fad1bcd67b",
+      "type": "free",
+      "name": "urodstvo",
+      "skins": null,
+      "capes": null,
+      "error": "",
+      "errorMessage": "",
+      "access_token": "",
+      "refresh_token": ""
+    },
+    {
+      "id": "80cb7a38-2ff6-4c72-82ac-c4f036e94943",
+      "type": "free",
+      "name": "test_account",
+      "skins": null,
+      "capes": null,
+      "error": "",
+      "errorMessage": "",
+      "access_token": "",
+      "refresh_token": ""
+    }
+  ]
 }

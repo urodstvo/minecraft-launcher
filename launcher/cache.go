@@ -11,6 +11,7 @@ var _launcherCachePath = "launcherCache.json"
 
 type LauncherAccount struct {
 	Id            string                `json:"id"`
+	Type 		  string 				`json:"type"`
 	Name          string                `json:"name"`
 	Skins         []minecraft.MinecraftProfileSkin `json:"skins"`
 	Capes         []minecraft.MinecraftProfileCape `json:"capes"`
@@ -59,6 +60,8 @@ func newCache() *launcherCache {
 		}
 		l.Save()
 	}
+
+
 	
 	return l
 }
