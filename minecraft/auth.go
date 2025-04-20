@@ -97,7 +97,7 @@ func GetSecureLoginData(clientID, redirectURI string, stateOpt *string) (loginUR
 	return u.String(), stateVal, codeVerifier, nil
 }
 
-func getAuthorizationToken(clientID, redirectURI, authCode string, clientSecret, codeVerifier *string) (*AuthorizationTokenResponse, error) {
+func getAuthorizationToken(clientID, redirectURI, authCode string, clientSecret, codeVerifier string) (*AuthorizationTokenResponse, error) {
 	values := url.Values{}
 	values.Set("client_id", clientID)
 	values.Set("scope", _scope)
@@ -105,13 +105,14 @@ func getAuthorizationToken(clientID, redirectURI, authCode string, clientSecret,
 	values.Set("redirect_uri", redirectURI)
 	values.Set("grant_type", "authorization_code")
 
-	if clientSecret != nil {
-		values.Set("client_secret", *clientSecret)
+	
+	if clientSecret != "" {
+		values.Set("client_secret", clientSecret)
 	}
-	if codeVerifier != nil {
-		values.Set("code_verifier", *codeVerifier)
+	if codeVerifier != "" {
+		values.Set("code_verifier", codeVerifier)
 	}
-
+	
 	req, err := http.NewRequest("POST", _tokenURL, bytes.NewBufferString(values.Encode()))
 	if err != nil {
 		return nil, err
@@ -125,12 +126,12 @@ func getAuthorizationToken(clientID, redirectURI, authCode string, clientSecret,
 	}
 	defer resp.Body.Close()
 
-	var result *AuthorizationTokenResponse
+	var result AuthorizationTokenResponse
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+	return &result, nil
 }
 
 func refreshAuthorizationToken(clientID, clientSecret string, redirectURI *string, refreshToken string) (*AuthorizationTokenResponse, error) {
@@ -242,12 +243,12 @@ func authenticateWithXSTS(xblToken string) (*XSTSResponse, error) {
 	}
 	defer resp.Body.Close()
 
-	var result *XSTSResponse
+	var result XSTSResponse
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+	return &result, nil
 }
 
 func authenticateWithMinecraft(userhash, xstsToken string) (*MinecraftAuthenticateResponse, error) {
@@ -333,25 +334,25 @@ func getProfile(accessToken string) (*MinecraftProfileResponse, error) {
 }
 
 func CompleteLogin(clientID, clientSecret, redirectURI, authCode, codeVerifier string) (*CompleteLoginResponse, error) {
-	tokenResp, err := getAuthorizationToken(clientID, clientSecret, redirectURI, &authCode, &codeVerifier)
+	tokenResp, err := getAuthorizationToken(clientID, redirectURI, authCode, clientSecret, codeVerifier)
 	if err != nil {
 		return nil, err
 	}
 	accessToken := tokenResp.AccessToken
-
+	
 	xblResp, err := authenticateWithXBL(accessToken)
 	if err != nil {
 		return nil, err
 	}
 	xblToken := xblResp.Token
 	userhash := xblResp.DisplayClaims.Xui[0].Uhs
-
+	
 	xstsResp, err := authenticateWithXSTS(xblToken)
 	if err != nil {
 		return nil, err
 	}
 	xstsToken := xstsResp.Token
-
+	
 	mcResp, err := authenticateWithMinecraft(userhash, xstsToken)
 	if err != nil {
 		return nil, err
@@ -360,7 +361,7 @@ func CompleteLogin(clientID, clientSecret, redirectURI, authCode, codeVerifier s
 	if mcAccessToken == "" {
 		return nil, errors.New("AzureAppNotPermitted")
 	}
-
+	
 	profile, err := getProfile(mcAccessToken)
 	if err != nil {
 		return nil, err

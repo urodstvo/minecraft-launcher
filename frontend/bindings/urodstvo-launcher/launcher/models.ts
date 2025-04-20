@@ -34,6 +34,7 @@ export class AccountsInfo {
 
 export class LauncherAccount {
     "id": string;
+    "type": string;
     "name": string;
     "skins": minecraft$0.MinecraftProfileSkin[];
     "capes": minecraft$0.MinecraftProfileCape[];
@@ -46,6 +47,9 @@ export class LauncherAccount {
     constructor($$source: Partial<LauncherAccount> = {}) {
         if (!("id" in $$source)) {
             this["id"] = "";
+        }
+        if (!("type" in $$source)) {
+            this["type"] = "";
         }
         if (!("name" in $$source)) {
             this["name"] = "";
@@ -76,14 +80,14 @@ export class LauncherAccount {
      * Creates a new LauncherAccount instance from a string or object.
      */
     static createFrom($$source: any = {}): LauncherAccount {
-        const $$createField2_0 = $$createType3;
-        const $$createField3_0 = $$createType5;
+        const $$createField3_0 = $$createType3;
+        const $$createField4_0 = $$createType5;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("skins" in $$parsedSource) {
-            $$parsedSource["skins"] = $$createField2_0($$parsedSource["skins"]);
+            $$parsedSource["skins"] = $$createField3_0($$parsedSource["skins"]);
         }
         if ("capes" in $$parsedSource) {
-            $$parsedSource["capes"] = $$createField3_0($$parsedSource["capes"]);
+            $$parsedSource["capes"] = $$createField4_0($$parsedSource["capes"]);
         }
         return new LauncherAccount($$parsedSource as Partial<LauncherAccount>);
     }

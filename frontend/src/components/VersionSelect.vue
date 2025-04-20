@@ -13,20 +13,20 @@ import {
   ComboboxTrigger,
 } from '@/components/ui/combobox'
 import { Check, ChevronsUpDown, Search, Loader2 } from 'lucide-vue-next'
-import { GetInstalledVersion, GetLauncherSettings, GetMinecraftVersions } from '@go/main/App'
-import { minecraft, main } from '@go/models'
+import { LauncherService, type LauncherSettings } from '@go/launcher'
+import type { MinecraftVersionInfo } from '@go/minecraft'
 import { useVirtualList } from '@vueuse/core'
 import { computed, onMounted, ref, watch } from 'vue'
 
-const settings = ref<main.LauncherSettings | null>(null)
-const versions = ref<minecraft.MinecraftVersionInfo[]>([])
-const installed = ref<minecraft.MinecraftVersionInfo[]>([])
+const settings = ref<LauncherSettings | null>(null)
+const versions = ref<MinecraftVersionInfo[]>([])
+const installed = ref<MinecraftVersionInfo[]>([])
 const search = ref('')
 
 onMounted(async () => {
-  versions.value = await GetMinecraftVersions()
-  settings.value = await GetLauncherSettings()
-  installed.value = await GetInstalledVersion()
+  versions.value = (await LauncherService.GetMinecraftVersions()) ?? []
+  settings.value = await LauncherService.GetLauncherSettings()
+  installed.value = (await LauncherService.GetInstalledVersion()) ?? []
 })
 
 const filteredVersions = computed(() => {
@@ -48,7 +48,7 @@ watch(filteredVersions, () => scrollTo(0))
 watch(filteredVersions, () => console.log('filtered ', filteredVersions.value.length))
 watch(list, () => console.log('virtual', list.value.length))
 
-const selected = defineModel<minecraft.MinecraftVersionInfo | null>('selected')
+const selected = defineModel<MinecraftVersionInfo | null>('selected')
 </script>
 
 <template>

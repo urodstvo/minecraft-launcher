@@ -7,6 +7,9 @@ import {Call as $Call, Create as $Create} from "@wailsio/runtime";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as application$0 from "../../github.com/wailsapp/wails/v3/pkg/application/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as minecraft$0 from "../minecraft/models.js";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -14,17 +17,17 @@ import * as minecraft$0 from "../minecraft/models.js";
 import * as $models from "./models.js";
 
 export function ChooseDirectory(): Promise<string> & { cancel(): void } {
-    let $resultPromise = $Call.ByID(1904846911) as any;
+    let $resultPromise = $Call.ByID(2005924590) as any;
     return $resultPromise;
 }
 
-export function CreateFreeAccount(username: string): Promise<void> & { cancel(): void } {
-    let $resultPromise = $Call.ByID(392868426, username) as any;
+export function DeleteAccount(id: string): Promise<void> & { cancel(): void } {
+    let $resultPromise = $Call.ByID(1544826504, id) as any;
     return $resultPromise;
 }
 
 export function GetAccounts(): Promise<$models.AccountsInfo> & { cancel(): void } {
-    let $resultPromise = $Call.ByID(2313763263) as any;
+    let $resultPromise = $Call.ByID(4204191442) as any;
     let $typingPromise = $resultPromise.then(($result: any) => {
         return $$createType0($result);
     }) as any;
@@ -33,7 +36,7 @@ export function GetAccounts(): Promise<$models.AccountsInfo> & { cancel(): void 
 }
 
 export function GetInstalledVersion(): Promise<minecraft$0.MinecraftVersionInfo[]> & { cancel(): void } {
-    let $resultPromise = $Call.ByID(2552268045) as any;
+    let $resultPromise = $Call.ByID(2395660188) as any;
     let $typingPromise = $resultPromise.then(($result: any) => {
         return $$createType2($result);
     }) as any;
@@ -42,7 +45,7 @@ export function GetInstalledVersion(): Promise<minecraft$0.MinecraftVersionInfo[
 }
 
 export function GetLastPlayedVersion(): Promise<minecraft$0.MinecraftVersionInfo | null> & { cancel(): void } {
-    let $resultPromise = $Call.ByID(3239363788) as any;
+    let $resultPromise = $Call.ByID(3471726875) as any;
     let $typingPromise = $resultPromise.then(($result: any) => {
         return $$createType3($result);
     }) as any;
@@ -51,7 +54,7 @@ export function GetLastPlayedVersion(): Promise<minecraft$0.MinecraftVersionInfo
 }
 
 export function GetLauncherSettings(): Promise<$models.LauncherSettings> & { cancel(): void } {
-    let $resultPromise = $Call.ByID(593284950) as any;
+    let $resultPromise = $Call.ByID(1348876603) as any;
     let $typingPromise = $resultPromise.then(($result: any) => {
         return $$createType4($result);
     }) as any;
@@ -60,12 +63,12 @@ export function GetLauncherSettings(): Promise<$models.LauncherSettings> & { can
 }
 
 export function GetLauncherVersion(): Promise<string> & { cancel(): void } {
-    let $resultPromise = $Call.ByID(3712935077) as any;
+    let $resultPromise = $Call.ByID(2334230546) as any;
     return $resultPromise;
 }
 
 export function GetMinecraftVersions(): Promise<minecraft$0.MinecraftVersionInfo[]> & { cancel(): void } {
-    let $resultPromise = $Call.ByID(2707100775) as any;
+    let $resultPromise = $Call.ByID(2693999292) as any;
     let $typingPromise = $resultPromise.then(($result: any) => {
         return $$createType2($result);
     }) as any;
@@ -74,27 +77,32 @@ export function GetMinecraftVersions(): Promise<minecraft$0.MinecraftVersionInfo
 }
 
 export function GetTotalRAM(): Promise<number> & { cancel(): void } {
-    let $resultPromise = $Call.ByID(2275920129) as any;
+    let $resultPromise = $Call.ByID(1130104332) as any;
     return $resultPromise;
 }
 
 export function OpenMinecraftDirectory(): Promise<void> & { cancel(): void } {
-    let $resultPromise = $Call.ByID(3009786339) as any;
+    let $resultPromise = $Call.ByID(4172241556) as any;
     return $resultPromise;
 }
 
 export function SaveLauncherSettings(settings: $models.LauncherSettings): Promise<void> & { cancel(): void } {
-    let $resultPromise = $Call.ByID(2833353209, settings) as any;
+    let $resultPromise = $Call.ByID(873484414, settings) as any;
     return $resultPromise;
 }
 
 export function SelectAccount(id: string): Promise<void> & { cancel(): void } {
-    let $resultPromise = $Call.ByID(625946280, id) as any;
+    let $resultPromise = $Call.ByID(105847305, id) as any;
+    return $resultPromise;
+}
+
+export function SetApp(app: application$0.App | null): Promise<void> & { cancel(): void } {
+    let $resultPromise = $Call.ByID(1425406301, app) as any;
     return $resultPromise;
 }
 
 export function StartMinecraft(opts: $models.StartOptions): Promise<void> & { cancel(): void } {
-    let $resultPromise = $Call.ByID(3205254530, opts) as any;
+    let $resultPromise = $Call.ByID(3976339689, opts) as any;
     return $resultPromise;
 }
 

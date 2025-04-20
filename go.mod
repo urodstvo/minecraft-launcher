@@ -4,6 +4,7 @@ go 1.23
 
 require (
 	github.com/google/uuid v1.6.0
+	github.com/joho/godotenv v1.5.1
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/ulikunitz/xz v0.5.12
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.9

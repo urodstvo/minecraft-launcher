@@ -14,23 +14,12 @@
     "showOldVersions": false,
     "showOnlyInstalled": false
   },
-  "selectedAccount": "186e4adf-b344-4527-a1c1-12fad1bcd67b",
+  "selectedAccount": "4dfdfc4c-5e9f-4652-9226-b8ce944967f1",
   "accounts": [
     {
-      "id": "186e4adf-b344-4527-a1c1-12fad1bcd67b",
+      "id": "4dfdfc4c-5e9f-4652-9226-b8ce944967f1",
       "type": "free",
       "name": "urodstvo",
-      "skins": null,
-      "capes": null,
-      "error": "",
-      "errorMessage": "",
-      "access_token": "",
-      "refresh_token": ""
-    },
-    {
-      "id": "80cb7a38-2ff6-4c72-82ac-c4f036e94943",
-      "type": "free",
-      "name": "test_account",
       "skins": null,
       "capes": null,
       "error": "",

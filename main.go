@@ -3,89 +3,37 @@ package main
 import (
 	"embed"
 	"log"
-	"runtime"
-	"time"
 
+	"urodstvo-launcher/auth"
 	"urodstvo-launcher/launcher"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
-	"github.com/wailsapp/wails/v3/pkg/events"
-	"github.com/wailsapp/wails/v3/pkg/icons"
 )
 
 //go:embed all:frontend/dist
 var assets embed.FS
 
-func main() {
+func main() {	
+	authService := auth.NewAuthService()
+	launcherService := launcher.NewLauncherService()
 
 	app := application.New(application.Options{
 		Name: "Minecraft Launcher",
 		Description: "by urodstvo",
 		Services: []application.Service{
-			application.NewService(launcher.NewLauncher(), application.ServiceOptions{}),
+			application.NewService(launcherService, application.ServiceOptions{}),
+			application.NewService(authService, application.ServiceOptions{}),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
 		},
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
-
 		},
 	})
 
-	window := app.NewWebviewWindowWithOptions(application.WebviewWindowOptions{
-		Title:  "Minecraft Launcher",
-		Name: "Minecraft Launcher",
-		Width:  1024,
-		Height: 768,
-		DisableResize: true,
-		MaximiseButtonState: application.ButtonDisabled,
-	})
-
-	systemTray := app.NewSystemTray()
-	// if runtime.GOOS == "windows" {
-	// 	systemTray.SetTooltip("Minecraft Launcher")
-	// }
-	if runtime.GOOS == "darwin" {
-		systemTray.SetTemplateIcon(icons.SystrayMacTemplate)
-		systemTray.SetLabel("Minecraft Launcher")
-	}
-
-	myMenu := app.NewMenu()
-	// myMenu.SetLabel("Minecraft Launcher")
-	myMenu.Add("Quit").OnClick(func(ctx *application.Context) {
-		app.Quit()
-	})
-
-	systemTray.SetMenu(myMenu)
-	systemTray.OnClick(func() {
-		if !window.IsVisible() {
-			window.Show()
-	
-			go func() {
-				time.Sleep(150 * time.Millisecond)
-				if window.IsVisible() && !window.IsMinimised() {
-					window.Focus()
-				}
-			}()
-			return
-		}
-	
-		if window.IsMinimised() {
-			window.Restore()
-			go func() {
-				time.Sleep(150 * time.Millisecond)
-				if window.IsVisible() {
-					window.Focus()
-				}
-			}()
-		}
-	})
-
-	window.RegisterHook(events.Common.WindowClosing, func(event *application.WindowEvent) {
-		window.Hide()
-		event.Cancel()
-	})
+	launcherService.SetApp(app)
+	authService.SetApp(app)
 
 	err := app.Run()
 	if err != nil {

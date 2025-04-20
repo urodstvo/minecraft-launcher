@@ -1,10 +1,10 @@
 {
   "fixed": {
-    "file_version": "0.2.0-beta"
+    "file_version": "0.2.1-beta"
   },
   "info": {
     "0000": {
-      "ProductVersion": "0.2.0-beta",
+      "ProductVersion": "0.2.1-beta",
       "CompanyName": "urodstvo",
       "FileDescription": "Minecraft Launcher",
       "LegalCopyright": "© 2025, urodstvo",

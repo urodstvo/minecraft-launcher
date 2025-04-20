@@ -14,7 +14,7 @@
     !define INFO_PRODUCTNAME "Minecraft Launcher"
 !endif
 !ifndef INFO_PRODUCTVERSION
-    !define INFO_PRODUCTVERSION "0.2.0-beta"
+    !define INFO_PRODUCTVERSION "0.2.1-beta"
 !endif
 !ifndef INFO_COPYRIGHT
     !define INFO_COPYRIGHT "© 2025, urodstvo"
