@@ -36,7 +36,7 @@ const addMicrosoftAccount = () => {
       <Input v-model="username" id="username-input" class="w-[400px]" autocomplete="off" name="new-password" />
       <Button @click="addFreeAccount" :disabled="!username.length">Create Free Account</Button>
       <Separator label="Or" />
-      <Button @click="addMicrosoftAccount">Sign In with Microsoft Account<MicrosoftIcon /></Button>
+      <Button @click="addMicrosoftAccount" disabled>Sign In with Microsoft Account<MicrosoftIcon /></Button>
     </div>
   </div>
 </template>

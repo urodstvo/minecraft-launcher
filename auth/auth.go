@@ -23,12 +23,14 @@ type AuthService struct {
 }
 
 func NewAuthService() *AuthService {
-	_ = godotenv.Load(".env")
+	if err := godotenv.Load(".env"); err != nil{
+		fmt.Println("not founded .env")
+	}
 
 	clientId := os.Getenv("MICROSOFT_CLIENT_ID")
 	redirectURI := os.Getenv("MICROSOFT_REDIRECT_URI")
 	if clientId == "" || redirectURI == "" {
-		panic("CLIENT_ID & REDIRECT_URI not found in .env")
+		fmt.Println("CLIENT_ID & REDIRECT_URI not found in .env")
 	}
 
 	return &AuthService{

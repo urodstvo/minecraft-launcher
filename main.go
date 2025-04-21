@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"log"
 
 	"urodstvo-launcher/auth"
@@ -29,6 +30,15 @@ func main() {
 		},
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
+		},
+		ErrorHandler: func(err error) {
+			fmt.Println(err.Error())
+		},
+		WarningHandler: func(s string) {
+			fmt.Println(s)
+		},
+		PanicHandler: func(a any) {
+			fmt.Printf("%v\n", a)
 		},
 	})
 
