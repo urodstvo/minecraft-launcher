@@ -5,7 +5,7 @@
 !include "FileFunc.nsh"
 
 !ifndef INFO_PROJECTNAME
-    !define INFO_PROJECTNAME "launcherd"
+    !define INFO_PROJECTNAME "launcher"
 !endif
 !ifndef INFO_COMPANYNAME
     !define INFO_COMPANYNAME "urodstvo"
@@ -14,7 +14,7 @@
     !define INFO_PRODUCTNAME "Minecraft Launcher"
 !endif
 !ifndef INFO_PRODUCTVERSION
-    !define INFO_PRODUCTVERSION "0.2.1-beta"
+    !define INFO_PRODUCTVERSION "0.2.2"
 !endif
 !ifndef INFO_COPYRIGHT
     !define INFO_COPYRIGHT "© 2025, urodstvo"

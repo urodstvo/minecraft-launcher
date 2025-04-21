@@ -12,7 +12,7 @@ info:
   description: "Minecraft Launcher" # The application description
   copyright: "(c) 2025, urodstvo" # Copyright text
   comments: "Minecraft Launcher" # Comments
-  version: "v0.2.1-beta" # The application version
+  version: "v0.2.2-beta" # The application version
 
 # Dev mode configuration
 dev_mode:

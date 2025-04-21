@@ -132,8 +132,8 @@ func installAssets(data ClientJson, mcDir string, callback Callback) error {
 	go func() {
 		defer progressWG.Done()
 		completed := 0
-		for progress := range progressCh {
-			completed += progress
+		for range progressCh {
+			completed++
 			callback.Progress(strconv.Itoa(completed))
 		}
 	}()

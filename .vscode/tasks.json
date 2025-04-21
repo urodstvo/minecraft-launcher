@@ -26,7 +26,16 @@
         }
       },
       "command": "go",
-      "args": ["build", "-tags", "production,desktop", "-gcflags", "all=-N -l", "-o", "build/bin/launcher.exe"]
+      "args": [
+        "build",
+        "-tags",
+        "production,desktop",
+        "-gcflags",
+        "all=-N -l",
+        // "-ldflags=-w -s -H windowsgui",
+        "-o",
+        "build/bin/launcher.exe"
+      ]
     },
     {
       "label": "build debug",

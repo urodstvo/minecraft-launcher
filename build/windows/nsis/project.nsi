@@ -22,7 +22,7 @@ Unicode true
 ## !define INFO_PROJECTNAME    "minecraft-launcher" # Default "launcher"
 ## !define INFO_COMPANYNAME    "urodstvo" # Default "My Company"
 ## !define INFO_PRODUCTNAME    "Minecraft Launcher" # Default "My Product"
-## !define INFO_PRODUCTVERSION "1.0.0"     # Default "0.1.0"
+## !define INFO_PRODUCTVERSION "0.2.2-beta"     # Default "0.1.0"
 ## !define INFO_COPYRIGHT      "(c) 2025, urodstvo" # Default "© now, My Company"
 ###
 ## !define PRODUCT_EXECUTABLE  "Application.exe"      # Default "${INFO_PROJECTNAME}.exe"

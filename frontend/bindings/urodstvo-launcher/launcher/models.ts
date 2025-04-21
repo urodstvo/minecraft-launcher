@@ -138,31 +138,6 @@ export class LauncherSettings {
     }
 }
 
-export class StartOptions {
-    "version": minecraft$0.MinecraftVersionInfo | null;
-
-    /** Creates a new StartOptions instance. */
-    constructor($$source: Partial<StartOptions> = {}) {
-        if (!("version" in $$source)) {
-            this["version"] = null;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new StartOptions instance from a string or object.
-     */
-    static createFrom($$source: any = {}): StartOptions {
-        const $$createField0_0 = $$createType7;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("version" in $$parsedSource) {
-            $$parsedSource["version"] = $$createField0_0($$parsedSource["version"]);
-        }
-        return new StartOptions($$parsedSource as Partial<StartOptions>);
-    }
-}
-
 // Private type creation functions
 const $$createType0 = LauncherAccount.createFrom;
 const $$createType1 = $Create.Array($$createType0);
@@ -170,5 +145,3 @@ const $$createType2 = minecraft$0.MinecraftProfileSkin.createFrom;
 const $$createType3 = $Create.Array($$createType2);
 const $$createType4 = minecraft$0.MinecraftProfileCape.createFrom;
 const $$createType5 = $Create.Array($$createType4);
-const $$createType6 = minecraft$0.MinecraftVersionInfo.createFrom;
-const $$createType7 = $Create.Nullable($$createType6);

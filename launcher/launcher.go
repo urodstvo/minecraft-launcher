@@ -18,6 +18,7 @@ type LauncherService struct {
 	M minecraft.MinecraftOptions
 	cache *launcherCache
 
+	window *application.WebviewWindow
 	app *application.App
 }
 
@@ -47,6 +48,8 @@ func (l *LauncherService) SetApp(app *application.App) {
 		DisableResize: true,
 		FullscreenButtonEnabled: false,
 	})
+
+	l.window = window
 
 	systemTray := app.NewSystemTray()
 	systemTray.SetLabel("Minecraft Launcher")
@@ -108,16 +111,16 @@ func (l *LauncherService) SetApp(app *application.App) {
 	})
 }
 
-func (a *LauncherService) GetLauncherVersion() string {
+func (l *LauncherService) GetLauncherVersion() string {
 	return minecraft.GetLibraryVersion()
 }
 
-func (a *LauncherService) GetMinecraftVersions() ([]minecraft.MinecraftVersionInfo, error) {
+func (l *LauncherService) GetMinecraftVersions() ([]minecraft.MinecraftVersionInfo, error) {
 	return minecraft.GetVersionList()
 }
 
-func (a *LauncherService) GetLastPlayedVersion() *minecraft.MinecraftVersionInfo {
- if a.cache.LastPlayedVersion == nil {
+func (l *LauncherService) GetLastPlayedVersion() *minecraft.MinecraftVersionInfo {
+ if l.cache.LastPlayedVersion == nil {
 	var found *minecraft.MinecraftVersionInfo
 	v, _ := minecraft.GetLatestVersion()
 	l, _ := minecraft.GetVersionList()
@@ -129,17 +132,17 @@ func (a *LauncherService) GetLastPlayedVersion() *minecraft.MinecraftVersionInfo
 	}
 	return found
  }
- return a.cache.LastPlayedVersion
+ return l.cache.LastPlayedVersion
 }
 
-func (a *LauncherService) GetInstalledVersion() ([]minecraft.MinecraftVersionInfo, error) {
-	return minecraft.GetInstalledVersions(a.M.GameDirectory)
+func (l *LauncherService) GetInstalledVersion() ([]minecraft.MinecraftVersionInfo, error) {
+	return minecraft.GetInstalledVersions(l.M.GameDirectory)
 }
 
-func (a *LauncherService) OpenMinecraftDirectory() {
+func (l *LauncherService) OpenMinecraftDirectory() {
 	dir := minecraft.GetMinecraftDirectory()
-	if a.M.GameDirectory != "" {
-		dir = a.M.GameDirectory
+	if l.M.GameDirectory != "" {
+		dir = l.M.GameDirectory
 	}
 
 	var cmd *exec.Cmd
@@ -157,7 +160,7 @@ func (a *LauncherService) OpenMinecraftDirectory() {
 	_ = cmd.Start()
 }
 
-func (a *LauncherService) GetTotalRAM() (uint64, error) {
+func (l *LauncherService) GetTotalRAM() (uint64, error) {
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {
 		return 0, err
@@ -165,76 +168,109 @@ func (a *LauncherService) GetTotalRAM() (uint64, error) {
 	return vmStat.Total / 1024 / 1024, nil
 }
 
-func (a *LauncherService) SaveLauncherSettings(settings LauncherSettings) error  {
-	a.cache.Settings = &settings
-	err := a.cache.Save()
+func (l *LauncherService) SaveLauncherSettings(settings LauncherSettings) error  {
+	l.cache.Settings = &settings
+	err := l.cache.Save()
 	if err != nil {
 		return err
 	}
 
-	LoadCacheToMinecraftOptions(*a.cache, &a.M)
+	LoadCacheToMinecraftOptions(*l.cache, &l.M)
 
 	return nil
 }
 
-func (a *LauncherService) GetLauncherSettings() LauncherSettings {
-	return *a.cache.Settings
+func (l *LauncherService) GetLauncherSettings() LauncherSettings {
+	return *l.cache.Settings
 }
 
-type StartOptions struct {
-	Version *minecraft.MinecraftVersionInfo `json:"version"`
+func (l *LauncherService) StartMinecraft(version minecraft.MinecraftVersionInfo) bool {
+	l.cache.LastPlayedVersion = &version	
+	l.cache.Save()
+
+	if l.M.Uuid == "" {
+		return false
+	}
+
+	callback := &minecraft.Callback{
+		Progress: func(message string) {
+			l.app.EmitEvent("install:progress", message)
+			// fmt.Println("[Progress] - ", message)
+		},
+		Status: func(message string) {
+			l.app.EmitEvent("install:status", message)
+			// fmt.Println("[Status] - ", message)
+		},
+		Max: func(message string) {
+			l.app.EmitEvent("install:max", message)
+			// fmt.Println("[Max] - ", message)
+		},
+	}
+
+	err := minecraft.InstallMinecraftVersion(version.Id, l.M, callback)
+	if err != nil {
+		return false
+	}
+
+	command, err := minecraft.GetMinecraftCommand(version.Id, l.M)
+	if err != nil {
+		return false
+	}
+
+	go func(){
+		cmd := exec.Command(command[0], command[1:]...)
+		l.window.Close()
+		cmd.Run()
+		l.window.Show()
+		time.Sleep(50 * time.Millisecond)
+		l.window.Focus()
+	}()
+
+	return true
 }
 
-func (a *LauncherService) StartMinecraft(opts StartOptions) {
-	a.cache.LastPlayedVersion = opts.Version	
-	a.cache.Save()
-
-	fmt.Println(a.M)
-	fmt.Println(a.cache)
-}
-
-func (a *LauncherService) ChooseDirectory() (string, error) {
+func (l *LauncherService) ChooseDirectory() (string, error) {
 	dialog := application.OpenFileDialog().CanChooseDirectories(true).CanChooseFiles(false).CanCreateDirectories(true)
 	dialog.SetTitle("Select Directory")
 
 	return dialog.PromptForSingleSelection()
 }
 
-func (a *LauncherService) SelectAccount(id string) {
+func (l *LauncherService) SelectAccount(id string) {
 	var selected LauncherAccount
-	for _, v := range a.cache.Accounts {
+	for _, v := range l.cache.Accounts {
 		if v.Id == id {
 			selected = v
 			break
 		}
 	}
 
-	a.cache.SelectedAccount = selected.Id
-	a.M.Uuid = selected.Id 
-	a.M.Username = selected.Name
-	a.M.Token = selected.AccessToken
+	l.cache.SelectedAccount = selected.Id
+	l.M.Uuid = selected.Id 
+	l.M.Username = selected.Name
+	l.M.Token = selected.AccessToken
 	
-	a.cache.Save()
+	l.cache.Save()
 }
 
-func (a *LauncherService) DeleteAccount(id string) {
-	if a.cache == nil {
+func (l *LauncherService) DeleteAccount(id string) {
+	if l.cache == nil {
 		return
 	}
 
-	newAccounts := make([]LauncherAccount, 0, len(a.cache.Accounts))
-	for _, acc := range a.cache.Accounts {
+	newAccounts := make([]LauncherAccount, 0, len(l.cache.Accounts))
+	for _, acc := range l.cache.Accounts {
 		if acc.Id != id {
 			newAccounts = append(newAccounts, acc)
 		}
 	}
-	a.cache.Accounts = newAccounts
+	l.cache.Accounts = newAccounts
 
-	if a.cache.SelectedAccount == id {
-		a.cache.SelectedAccount = ""
+	if l.cache.SelectedAccount == id {
+		l.cache.SelectedAccount = ""
 	}
 
-	a.cache.Save()
+	l.cache.Save()
 }
 
 type AccountsInfo struct {
@@ -242,9 +278,9 @@ type AccountsInfo struct {
 	Accounts []LauncherAccount `json:"accounts,omitempty"`
 }
 
-func (a *LauncherService) GetAccounts() AccountsInfo{
+func (l *LauncherService) GetAccounts() AccountsInfo{
 	return AccountsInfo{
-		SelectedAccount: a.cache.SelectedAccount,
-		Accounts: a.cache.Accounts,
+		SelectedAccount: l.cache.SelectedAccount,
+		Accounts: l.cache.Accounts,
 	}
 }

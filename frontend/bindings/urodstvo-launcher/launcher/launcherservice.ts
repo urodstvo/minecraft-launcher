@@ -101,8 +101,8 @@ export function SetApp(app: application$0.App | null): Promise<void> & { cancel(
     return $resultPromise;
 }
 
-export function StartMinecraft(opts: $models.StartOptions): Promise<void> & { cancel(): void } {
-    let $resultPromise = $Call.ByID(3976339689, opts) as any;
+export function StartMinecraft(version: minecraft$0.MinecraftVersionInfo): Promise<boolean> & { cancel(): void } {
+    let $resultPromise = $Call.ByID(3976339689, version) as any;
     return $resultPromise;
 }
 

@@ -45,8 +45,6 @@ const { list, containerProps, wrapperProps, scrollTo } = useVirtualList(filtered
   itemHeight: 32,
 })
 watch(filteredVersions, () => scrollTo(0))
-watch(filteredVersions, () => console.log('filtered ', filteredVersions.value.length))
-watch(list, () => console.log('virtual', list.value.length))
 
 const selected = defineModel<MinecraftVersionInfo | null>('selected')
 </script>
