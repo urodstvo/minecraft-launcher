@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"runtime"
+	"syscall"
 	"time"
 
 	"urodstvo-launcher/minecraft"
@@ -219,8 +220,13 @@ func (l *LauncherService) StartMinecraft(version minecraft.MinecraftVersionInfo)
 
 	go func(){
 		cmd := exec.Command(command[0], command[1:]...)
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			HideWindow: true,
+			CreationFlags: 0x08000000,
+		}
+		cmd.Start()
 		l.window.Close()
-		cmd.Run()
+		cmd.Wait()
 		l.window.Show()
 		time.Sleep(50 * time.Millisecond)
 		l.window.Focus()
