@@ -1,6 +1,7 @@
 package minecraft
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,10 +17,13 @@ import (
 	"github.com/google/uuid"
 )
 
+//go:embed .version
+var versionFile []byte
+
 var (
 	mu sync.Mutex
-	_versionCache string
-	_versionOnce  sync.Once
+	_versionCache string = string(versionFile)
+	// _versionOnce  sync.Once
 	_requestsResponseCache = make(map[string]requestsResponseCache)
 	_userAgentCache string
 )
@@ -43,15 +47,15 @@ func getUserAgent() string {
 }
 
 func GetLibraryVersion() string {
-	_versionOnce.Do(func() {		
-		filePath := "minecraft/.version" 
-		data, err := os.ReadFile(filePath)
-		if err != nil {
-			_versionCache = "unknown"
-			return
-		}
-		_versionCache = string(data)
-	})
+	// _versionOnce.Do(func() {		
+	// 	filePath := "minecraft/.version" 
+	// 	data, err := os.ReadFile(filePath)
+	// 	if err != nil {
+	// 		_versionCache = "unknown"
+	// 		return
+	// 	}
+	// 	_versionCache = string(data)
+	// })
 
 	return _versionCache
 }
